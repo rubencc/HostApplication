@@ -123,21 +123,22 @@ public class PeerConnection implements Runnable {
 
             } else {
                 if (_command.isBroadcast()) {
+                    //System.out.println("Hilo peer -- Recibiendo respuestas broadcast" + _command);
                     synchronized (this.broadcastCommandList) {
                         if (this.broadcastCommandList.containsKey(_command.getGUID())) {
+                            //System.out.println("Elemento añadido a la lista " + _command.getGUID() + " " + _command.getAddress());
                             ArrayList<Command> _tempList = this.broadcastCommandList.get(_command.getGUID());
                             synchronized (_tempList) {
                                 _tempList.add(_command);
                                 _tempList.notify();
                             }
                         } else {
+                            //System.out.println("Elemento añadido a la nueva lista " + _command.getGUID() + " " + _command.getAddress());
                             ArrayList<Command> _tempList = new ArrayList<Command>();
-                            synchronized (_tempList) {
-                                _tempList.add(_command);
-                                this.broadcastCommandList.put(_command.getGUID(), _tempList);
-                                _tempList.notify();
-                            }
+                            _tempList.add(_command);
+                            this.broadcastCommandList.put(_command.getGUID(), _tempList);
                         }
+
                         this.broadcastCommandList.notify();
                     }
                 } else {
@@ -163,7 +164,7 @@ public class PeerConnection implements Runnable {
      * @return
      */
     private Command readDatagram(Datagram receiveDg) {
-        Command _commandList = null;
+        Command _command = null;
         try {
             /*El formato de la PDU es {direccion, tipo, valor, tiempo, guid, broadcast}*/
             String _address = receiveDg.readUTF();
@@ -173,12 +174,12 @@ public class PeerConnection implements Runnable {
             String _GUID = receiveDg.readUTF();
             boolean _individual = receiveDg.readBoolean();
             //System.out.println(PeerConnection.class.getName() + "[readDatagram]" + " " + _address + " " + _type + " " + _value + " " + _time + " " + _GUID + " " + _individual);
-            _commandList = new Command(_address, _type, _value, _time, _GUID, _individual);
+            _command = new Command(_address, _type, _value, _time, _GUID, _individual);
 
         } catch (IOException ex) {
             Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return _commandList;
+        return _command;
     }
 
     /**
@@ -279,7 +280,7 @@ public class PeerConnection implements Runnable {
      * @return
      */
     public synchronized ArrayList<Command> getBroadcastCommandList(String GUID) {
-        synchronized (broadcastCommandList) {
+        synchronized (this.broadcastCommandList) {
             return this.broadcastCommandList.get(GUID);
         }
     }
@@ -290,7 +291,7 @@ public class PeerConnection implements Runnable {
      * @param GUID
      */
     public synchronized void deleteBroadcastCommandList(String GUID) {
-        synchronized (broadcastCommandList) {
+        synchronized (this.broadcastCommandList) {
             this.broadcastCommandList.remove(GUID);
             this.broadcastCommandList.notify();
         }
@@ -302,9 +303,10 @@ public class PeerConnection implements Runnable {
      * @param GUID
      */
     public synchronized void addGUIDforBroadcastReply(String GUID) {
-        synchronized (broadcastCommandList) {
+        synchronized (this.broadcastCommandList) {
+            //System.out.println("Nueva lista en addguid");
             this.broadcastCommandList.put(GUID, new ArrayList<Command>());
-            this.broadcastCommandList.notify();
+            this.broadcastCommandList.notifyAll();
         }
     }
 }

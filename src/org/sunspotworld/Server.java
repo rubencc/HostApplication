@@ -93,7 +93,7 @@ public class Server implements Runnable {
             try {
                 this.bCon.SendBroadcast(command);
                 //Se añade al mapa el GUID de esta peticion para esperar sus resultados
-                this.pCon.addGUIDforBroadcastReply(command.getGUID());
+                //this.pCon.addGUIDforBroadcastReply(command.getGUID());
                 result = true;
             } catch (BroadcastConnectionException ex) {
                 //Si no se puede enviar mediante la conexion broadcast
@@ -146,9 +146,14 @@ public class Server implements Runnable {
         sendToClient(this.cmdListToClient);
     }
 
-    private void getBroadcastReplies(Command _command) {
-        //System.out.println("Esperando broadcast\n" + _command);
-        ArrayList<Command> _commandListFromSpot = this.pCon.getBroadcastCommandList(_command.getGUID());
+    private void getBroadcastReplies(Command command) {
+        //System.out.println("Esperando broadcast\n" + command);
+        ArrayList<Command> _commandListFromSpot = null;
+        do {
+            _commandListFromSpot = this.pCon.getBroadcastCommandList(command.getGUID());
+        } while (_commandListFromSpot == null);
+
+
         synchronized (_commandListFromSpot) {
             //Mientras que la lista este vacia o el numero de respuestas sea menor que el de dispositivos.
             while (_commandListFromSpot.isEmpty() || (_commandListFromSpot.size() < pCon.numberOfPeers() && !_commandListFromSpot.isEmpty())) {
@@ -162,7 +167,7 @@ public class Server implements Runnable {
             //Copiamos toda la lista de elementos para esa peticion
             this.cmdListToClient.addAll(_commandListFromSpot);
             //Eliminamos la lista y la entrada en el hashmap.
-            this.pCon.deleteBroadcastCommandList(_command.getGUID());
+            this.pCon.deleteBroadcastCommandList(command.getGUID());
         }
 
     }
@@ -170,28 +175,28 @@ public class Server implements Runnable {
     /**
      * Recupera las respuestas correspondientes al campo GUID de este comando
      *
-     * @param _command
+     * @param command
      */
-    private void getNoBroadcastReplies(Command _command) {
+    private void getNoBroadcastReplies(Command command) {
         //System.out.println("Esperando no broadcast");
         Command _tempCommand = null;
         //Espera hasta que la respuesta esta disponible ya que el hasmap devuelve
         //null mientras que la clave no este añadida a su mapa.
         //Podria producirse una espera infinita en caso de que el dispositivo nunca llegase a enviar respuesta.
         do {
-            _tempCommand = this.pCon.getIndividualCommand(_command.getGUID());
+            _tempCommand = this.pCon.getIndividualCommand(command.getGUID());
         } while (_tempCommand == null);
         this.cmdListToClient.add(_tempCommand);
-        this.pCon.deleteIndividualCommamd(_command.getGUID());
+        this.pCon.deleteIndividualCommamd(command.getGUID());
     }
 
     /**
      * Procesa los mensajes para enviarselos a los spots
      *
-     * @param _cmdlistFromClient
+     * @param cmdlistFromClient
      */
-    private void processToSendToSpots(ArrayList<Command> _cmdlistFromClient) {
-        Iterator<Command> it = _cmdlistFromClient.iterator();
+    private void processToSendToSpots(ArrayList<Command> cmdlistFromClient) {
+        Iterator<Command> it = cmdlistFromClient.iterator();
         ArrayList<Command> _tempList = new ArrayList<Command>();
         //Buscamos is hay comandos en multicast
         while (it.hasNext()) {
@@ -203,17 +208,17 @@ public class Server implements Runnable {
                 ArrayList<String> _listAddress = this.peerDevices.isMulticastAddress(_command.getAddress());
                 //Si la lista de direcciones multicas no es nula se crean nuevos comandos
                 if (_listAddress != null) {
-                    _tempList = createNewMessagesFromMulticast(_listAddress, _tempList, _command);
+                    _tempList.addAll(createNewMessagesFromMulticast(_listAddress, _tempList, _command));
                     it.remove();
                 }
             }
         }
 
         if (_tempList.size() > 0) {
-            _cmdlistFromClient.addAll(_tempList);
+            cmdlistFromClient.addAll(_tempList);
         }
 
-        it = _cmdlistFromClient.iterator();
+        it = cmdlistFromClient.iterator();
         while (it.hasNext()) {
             Command _command = it.next();
             //Se envia el comando
@@ -230,11 +235,11 @@ public class Server implements Runnable {
     /**
      * Procesa las respuestas para enviarselas al cliente
      *
-     * @param _cmdlistFromClient
+     * @param cmdlistFromClient
      */
-    private void processToSendToClient(ArrayList<Command> _cmdlistFromClient) {
+    private void processToSendToClient(ArrayList<Command> cmdlistFromClient) {
         //System.out.println(_cmdlistFromClient.toString());
-        Iterator<Command> it = _cmdlistFromClient.iterator();
+        Iterator<Command> it = cmdlistFromClient.iterator();
         while (it.hasNext()) {
             Command _command = it.next();
             //Busqueda en lista de mensajes broadcasr
@@ -246,38 +251,38 @@ public class Server implements Runnable {
         }
     }
 
-    private void manageMulticastConfiguration(Command _command) {
+    private void manageMulticastConfiguration(Command command) {
         //Añadimos la nueva direccion multicast al grupo multicas correspondiente
         System.out.println("Mensaje de gestion de multicast");
-        switch (_command.getType()) {
+        switch (command.getType()) {
             case ADD_ADDRESS_MULTICAST:
-                this.peerDevices.addToMulticast(_command.getAddress(), _command.getValue());
-                this.cmdListToClient.add(new Command(_command.getAddress(), _command.getType(), "Añadido " + _command.getValue() + " a multicast " + _command.getAddress(), System.currentTimeMillis(), _command.getGUID(), false));
+                this.peerDevices.addToMulticast(command.getAddress(), command.getValue());
+                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), "Añadido " + command.getValue() + " a multicast " + command.getAddress(), System.currentTimeMillis(), command.getGUID(), false));
                 break;
             case DELETE_ADDRES_MULTICAST:
-                this.peerDevices.deleteFromMulticast(_command.getAddress(), _command.getValue());
-                this.cmdListToClient.add(new Command(_command.getAddress(), _command.getType(), "Eliminado " + _command.getValue() + " de multicast " + _command.getAddress(), System.currentTimeMillis(), _command.getGUID(), false));
+                this.peerDevices.deleteFromMulticast(command.getAddress(), command.getValue());
+                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), "Eliminado " + command.getValue() + " de multicast " + command.getAddress(), System.currentTimeMillis(), command.getGUID(), false));
                 break;
             case DELETE_MULTICAST:
-                this.peerDevices.deleteMulticastList(_command.getAddress());
-                this.cmdListToClient.add(new Command(_command.getAddress(), _command.getType(), "Eliminada lista multicast " + _command.getValue(), System.currentTimeMillis(), _command.getGUID(), false));
+                this.peerDevices.deleteMulticastList(command.getAddress());
+                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), "Eliminada lista multicast " + command.getValue(), System.currentTimeMillis(), command.getGUID(), false));
                 break;
 
         }
 
     }
 
-    private ArrayList<Command> createNewMessagesFromMulticast(ArrayList<String> _listAddress, ArrayList<Command> _tempList, Command _command) {
-        Iterator<String> itAddress = _listAddress.iterator();
-        _tempList = new ArrayList<Command>();
+    private ArrayList<Command> createNewMessagesFromMulticast(ArrayList<String> listAddress, ArrayList<Command> tempList, Command command) {
+        Iterator<String> itAddress = listAddress.iterator();
+        tempList = new ArrayList<Command>();
         while (itAddress.hasNext()) {
             //Para cada direccion de red de la lista multicast
             //creamos un nuevo comando con nuevo GUID
-            Command _tempCommand = new Command(itAddress.next(), _command.getType(), _command.getValue(), System.currentTimeMillis(), UUID.randomUUID().toString(), _command.isBroadcast());
+            Command _tempCommand = new Command(itAddress.next(), command.getType(), command.getValue(), System.currentTimeMillis(), UUID.randomUUID().toString(), command.isBroadcast());
             //Añadimos el comando temporal a la lista de los recibidos como si
             //hubiera sido realmente recibido
-            _tempList.add(_tempCommand);
+            tempList.add(_tempCommand);
         }
-        return _tempList;
+        return tempList;
     }
 }

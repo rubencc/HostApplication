@@ -3,7 +3,6 @@ package org.sunspotworld;
 import org.host.application.Network.PassiveCheckNetworkStatus;
 import org.host.application.Network.BroadcastConnection;
 import org.host.application.Network.PeerConnection;
-import com.sun.spot.peripheral.ota.OTACommandServer;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Timer;
