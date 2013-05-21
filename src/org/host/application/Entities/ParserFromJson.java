@@ -44,7 +44,12 @@ public class ParserFromJson {
                 JSONObject _element = (JSONObject) itr.next();
                 long _temp = (Long) _element.get("Type");
                 //Command _comm = new Command((String) _element.get("Address"), (int) _temp, (String) _element.get("Value"), _time);
-                Command _comm = new Command((String) _element.get("Address"), (int) _temp, (String) _element.get("Value"), _time, (String) _element.get("GUID"), (Boolean) _element.get("Broadcast"));
+                Command _comm = new Command((String) _element.get("Address"), (int) _temp, _time, (String) _element.get("GUID"), (Boolean) _element.get("Broadcast"));
+                JSONArray _valueList = (JSONArray) jsonObject.get("Values");
+                Iterator vIt = _valueList.iterator();
+                while (vIt.hasNext()) {
+                    _comm.addValue((String) itr.next());
+                }
                 _message.AddCommand(_comm);
             }
         } catch (ParseException ex) {

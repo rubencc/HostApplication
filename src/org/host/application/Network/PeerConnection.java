@@ -8,6 +8,7 @@ import com.sun.spot.io.j2me.radiogram.RadiogramConnection;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.microedition.io.Connector;
@@ -169,12 +170,16 @@ public class PeerConnection implements Runnable {
             /*El formato de la PDU es {direccion, tipo, valor, tiempo, guid, broadcast}*/
             String _address = receiveDg.readUTF();
             int _type = receiveDg.readInt();
-            String _value = receiveDg.readUTF();
+            int _count = receiveDg.readInt();
+            ArrayList<String> _values = new ArrayList<String>();
+            for (int i = 0; i < _count; i++) {
+                _values.add(receiveDg.readUTF());
+            }
             long _time = receiveDg.readLong();
             String _GUID = receiveDg.readUTF();
             boolean _individual = receiveDg.readBoolean();
             //System.out.println(PeerConnection.class.getName() + "[readDatagram]" + " " + _address + " " + _type + " " + _value + " " + _time + " " + _GUID + " " + _individual);
-            _command = new Command(_address, _type, _value, _time, _GUID, _individual);
+            _command = new Command(_address, _type, _values, _time, _GUID, _individual);
 
         } catch (IOException ex) {
             Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
@@ -202,7 +207,12 @@ public class PeerConnection implements Runnable {
             /*El formato de la PDU es {tipo, valor, guid}*/
             this.sendDg.writeInt(command.getType());
             if (command.getValue() != null) {
-                this.sendDg.writeUTF(command.getValue());
+                this.sendDg.writeInt(command.countValues());
+                Iterator it = command.getValue().iterator();
+                while (it.hasNext()) {
+                    this.sendDg.writeUTF((String) it.next());
+                }
+
             } else {
                 _sendCond = false;
             }

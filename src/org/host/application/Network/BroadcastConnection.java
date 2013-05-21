@@ -5,6 +5,7 @@
 package org.host.application.Network;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.microedition.io.Connector;
@@ -96,7 +97,12 @@ public class BroadcastConnection implements Runnable {
                 /*El formato de la PDU es {tipo, valor, guid}*/
                 sendDg.writeInt(command.getType());
                 if (command.getValue() != null) {
-                    sendDg.writeUTF(command.getValue());
+                    sendDg.writeInt(command.countValues());
+                    Iterator it = command.getValue().iterator();
+                    while (it.hasNext()) {
+                        sendDg.writeUTF((String) it.next());
+                    }
+
                 } else {
                     _sendCond = false;
                 }

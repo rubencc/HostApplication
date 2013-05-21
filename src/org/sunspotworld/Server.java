@@ -98,7 +98,9 @@ public class Server implements Runnable {
             } catch (BroadcastConnectionException ex) {
                 //Si no se puede enviar mediante la conexion broadcast
                 //se crea un mensaje de error y se añade a la lista de respuestas
-                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), ex.getMessage(), System.currentTimeMillis(), command.getGUID(), true));
+                ArrayList<String> _tempList = new ArrayList<String>();
+                _tempList.add(ex.getMessage());
+                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), _tempList, System.currentTimeMillis(), command.getGUID(), true));
                 result = false;
             }
         } else {
@@ -109,7 +111,9 @@ public class Server implements Runnable {
             } catch (PeerConnectionException ex) {
                 //Si el dispositivo no esta conectado se ha generado la excepcion
                 //y se envia una entidad comando en respuesta indicando el error.
-                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), ex.getMessage(), System.currentTimeMillis(), command.getGUID(), false));
+                ArrayList<String> _tempList = new ArrayList<String>();
+                _tempList.add(ex.getMessage());
+                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), _tempList, System.currentTimeMillis(), command.getGUID(), false));
                 result = false;
             }
         }
@@ -141,7 +145,9 @@ public class Server implements Runnable {
      */
     private void sendErrorToClient(String error, int type) {
         System.out.println(error);
-        Command _cmd = new Command("ERROR", type, error, System.currentTimeMillis());
+        ArrayList<String> _tempList = new ArrayList<String>();
+        _tempList.add(error);
+        Command _cmd = new Command("ERROR", type, _tempList, System.currentTimeMillis());
         this.cmdListToClient.add(_cmd);
         sendToClient(this.cmdListToClient);
     }
@@ -254,18 +260,25 @@ public class Server implements Runnable {
     private void manageMulticastConfiguration(Command command) {
         //Añadimos la nueva direccion multicast al grupo multicas correspondiente
         System.out.println("Mensaje de gestion de multicast");
+        Command _command;
         switch (command.getType()) {
             case ADD_ADDRESS_MULTICAST:
-                this.peerDevices.addToMulticast(command.getAddress(), command.getValue());
-                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), "Añadido " + command.getValue() + " a multicast " + command.getAddress(), System.currentTimeMillis(), command.getGUID(), false));
+                this.peerDevices.addToMulticast(command.getAddress(), command.getValue().get(0));
+                _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
+                _command.addValue("Añadido " + command.getValue().get(0) + " a multicast " + command.getAddress());
+                this.cmdListToClient.add(_command);
                 break;
             case DELETE_ADDRES_MULTICAST:
-                this.peerDevices.deleteFromMulticast(command.getAddress(), command.getValue());
-                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), "Eliminado " + command.getValue() + " de multicast " + command.getAddress(), System.currentTimeMillis(), command.getGUID(), false));
+                this.peerDevices.deleteFromMulticast(command.getAddress(), command.getValue().get(0));
+                _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
+                _command.addValue("Eliminado " + command.getValue().get(0) + " de multicast " + command.getAddress());
+                this.cmdListToClient.add(_command);
                 break;
             case DELETE_MULTICAST:
                 this.peerDevices.deleteMulticastList(command.getAddress());
-                this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), "Eliminada lista multicast " + command.getValue(), System.currentTimeMillis(), command.getGUID(), false));
+                _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
+                _command.addValue("Eliminada lista multicast " + command.getValue().get(0));
+                this.cmdListToClient.add(_command);
                 break;
 
         }

@@ -34,7 +34,13 @@ public class ParserToJson {
             Command _cmd = (Command) itr.next();
             _temp.put("Address", _cmd.getAddress());
             _temp.put("Type", _cmd.getType());
-            _temp.put("Value", _cmd.getValue());
+            ArrayList<String> _valueList = _cmd.getValue();
+            Iterator vIt = _valueList.iterator();
+            JSONArray _valuesJSON = new JSONArray();
+            while (vIt.hasNext()) {
+                _valuesJSON.add(vIt.next());
+            }
+            _temp.put("Values", _valuesJSON);
             _temp.put("Time", new Long(_cmd.getTime()));
             _temp.put("GUID", _cmd.getGUID());
             _temp.put("Broadcast", _cmd.isBroadcast());

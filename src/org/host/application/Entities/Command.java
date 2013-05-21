@@ -5,6 +5,7 @@
 package org.host.application.Entities;
 
 import Helpers.DateHelper;
+import java.util.ArrayList;
 
 /**
  *
@@ -16,17 +17,17 @@ public class Command {
 
     private String address;
     private int Type;
-    private String value;
+    private ArrayList<String> values;
     private long time;
     private String formatedTime;
     private String GUID;
     private boolean broadcast;
     private final String EMPTY = " ";
 
-    public Command(String address, int type, String value, long time) {
+    public Command(String address, int type, ArrayList<String> values, long time) {
         this.address = address;
         this.Type = type;
-        this.value = value;
+        this.values = values;
         this.time = time;
         this.GUID = EMPTY;
         this.broadcast = false;
@@ -34,10 +35,21 @@ public class Command {
 
     }
 
-    public Command(String address, int type, String value, long time, String GUID, boolean broadcast) {
+    public Command(String address, int type, ArrayList<String> values, long time, String GUID, boolean broadcast) {
         this.address = address;
         this.Type = type;
-        this.value = value;
+        this.values = values;
+        this.time = time;
+        this.GUID = GUID;
+        this.broadcast = broadcast;
+        this.formatedTime = DateHelper.convertLongToString(time);
+
+    }
+
+    public Command(String address, int type, long time, String GUID, boolean broadcast) {
+        this.address = address;
+        this.Type = type;
+        this.values = new ArrayList<String>();
         this.time = time;
         this.GUID = GUID;
         this.broadcast = broadcast;
@@ -48,7 +60,7 @@ public class Command {
     public Command(int type) {
         this.address = EMPTY;
         this.Type = type;
-        this.value = EMPTY;
+        this.values = new ArrayList<String>();
         this.time = System.currentTimeMillis();
         this.GUID = EMPTY;
         this.broadcast = false;
@@ -79,14 +91,14 @@ public class Command {
 
     @Override
     public String toString() {
-        return new String("Address: " + this.address + " Tipo: " + this.Type + "\nValue: " + this.value + " GUID: " + this.GUID + "\nBroadcast: " + this.broadcast);
+        return new String("Address: " + this.address + " Tipo: " + this.Type + "\nValue: " + this.values + " GUID: " + this.GUID + "\nBroadcast: " + this.broadcast);
     }
 
     /**
      * @return the value
      */
-    public String getValue() {
-        return value;
+    public ArrayList<String> getValue() {
+        return values;
     }
 
     /**
@@ -122,5 +134,13 @@ public class Command {
      */
     public void setBroadcast(boolean individual) {
         this.broadcast = individual;
+    }
+
+    public void addValue(String value) {
+        this.values.add(value);
+    }
+
+    public int countValues() {
+        return this.values.size();
     }
 }
