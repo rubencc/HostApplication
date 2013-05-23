@@ -69,6 +69,7 @@ public class Server implements Runnable {
                     processToSendToClient(_cmdlistFromClient);
                     //Se envian respuestas al cliente
                     sendToClient(this.cmdListToClient);
+                    this.cmdListToClient.clear();
                 }
             } else {
                 System.out.println("Enviando error al cliente");
