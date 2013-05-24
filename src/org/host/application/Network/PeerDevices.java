@@ -6,7 +6,6 @@ package org.host.application.Network;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -62,7 +61,7 @@ public class PeerDevices {
             int _count = this.devices.get(address);
             if (_count > 0) {
                 _count--;
-                devices.put(address, _count);
+                this.devices.put(address, _count);
             }
         }
     }
@@ -73,8 +72,8 @@ public class PeerDevices {
      */
     public synchronized void checkAllDevices() {
         ArrayList<String> _addressList = new ArrayList<String>();
-        synchronized (devices) {
-            for (Map.Entry<String, Integer> item : devices.entrySet()) {
+        synchronized (this.devices) {
+            for (Map.Entry<String, Integer> item : this.devices.entrySet()) {
                 int _count = item.getValue();
 
                 switch (_count) {
@@ -94,7 +93,7 @@ public class PeerDevices {
             }
             if (_addressList.size() > 0) {
                 for (int i = 0; i < _addressList.size(); i++) {
-                    devices.remove(_addressList.get(i));
+                    this.devices.remove(_addressList.get(i));
                 }
             }
         }
@@ -107,7 +106,7 @@ public class PeerDevices {
      * @return
      */
     public synchronized boolean existDevices(String address) {
-        synchronized (devices) {
+        synchronized (this.devices) {
             return this.devices.containsKey(address);
         }
     }
@@ -118,7 +117,7 @@ public class PeerDevices {
      * @return
      */
     public synchronized boolean isEmpty() {
-        synchronized (devices) {
+        synchronized (this.devices) {
             return this.devices.isEmpty();
         }
     }
@@ -131,7 +130,7 @@ public class PeerDevices {
      */
     public synchronized int numberOfPeers() {
         int size = 0;
-        synchronized (devices) {
+        synchronized (this.devices) {
             if (!this.devices.isEmpty()) {
                 size = this.devices.size();
             }
@@ -206,5 +205,18 @@ public class PeerDevices {
             System.out.println("Lista multicast " + multicasAddress + " eliminada");
             this.multicastList.remove(multicasAddress);
         }
+    }
+
+    /**
+     * Devuelve una copia de la lista que contiene las direcciones multicast.
+     *
+     * @return
+     */
+    public synchronized HashMap<String, ArrayList<String>> getMulticastList() {
+        HashMap<String, ArrayList<String>> _returnList = new HashMap<String, ArrayList<String>>();
+        synchronized (this.multicastList) {
+            _returnList.putAll(this.multicastList);
+        }
+        return _returnList;
     }
 }
