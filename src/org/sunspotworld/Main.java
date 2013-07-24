@@ -30,9 +30,9 @@ public class Main {
         PeerConnection _pCon = new PeerConnection();
         new Thread(_pCon).start();
 
-        this.ntPassive = new PassiveCheckNetworkStatus();
-        this.timer = new Timer("NetworkStatus");
-        this.timer.schedule(this.ntPassive, 2000, 20000);
+        //this.ntPassive = new PassiveCheckNetworkStatus();
+        //this.timer = new Timer("NetworkStatus");
+        //this.timer.schedule(this.ntPassive, 2000, 20000);
 
         //El ServerSocket atiente peticiones entrantes.
         while (true) {

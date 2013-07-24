@@ -25,7 +25,7 @@ public class Command {
     private final String EMPTY = " ";
 
     public Command(String address, int type, ArrayList<String> values, long time) {
-        this.address = address;
+        this.address = address.toUpperCase();
         this.Type = type;
         this.values = values;
         this.time = time;
@@ -36,7 +36,7 @@ public class Command {
     }
 
     public Command(String address, int type, ArrayList<String> values, long time, String GUID, boolean broadcast) {
-        this.address = address;
+        this.address = address.toUpperCase();
         this.Type = type;
         this.values = values;
         this.time = time;
@@ -47,7 +47,7 @@ public class Command {
     }
 
     public Command(String address, int type, long time, String GUID, boolean broadcast) {
-        this.address = address;
+        this.address = address.toUpperCase();
         this.Type = type;
         this.values = new ArrayList<String>();
         this.time = time;

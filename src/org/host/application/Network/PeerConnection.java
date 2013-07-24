@@ -222,7 +222,7 @@ public class PeerConnection implements Runnable {
                 _sendCond = false;
             }
         } catch (Exception e) {
-            System.err.println("setUp caught " + e.getMessage() + this.getClass());
+            throw new PeerConnectionException("El dispositivo no esta conectado o la direccion multicast no es valida");
         }
 
         try {

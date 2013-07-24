@@ -205,7 +205,7 @@ public class Server implements Runnable {
     private void processToSendToSpots(ArrayList<Command> cmdlistFromClient) {
         Iterator<Command> it = cmdlistFromClient.iterator();
         ArrayList<Command> _tempList = new ArrayList<Command>();
-        //Buscamos is hay comandos en multicast
+        //Buscamos si hay comandos en multicast
         while (it.hasNext()) {
             Command _command = it.next();
             if (_command.getType() == ADD_ADDRESS_MULTICAST || _command.getType() == DELETE_ADDRES_MULTICAST || _command.getType() == DELETE_MULTICAST) {
@@ -258,6 +258,11 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     * Gestiona los comandos de configuracion para multicast
+     *
+     * @param command Comando de gestion
+     */
     private void manageMulticastConfiguration(Command command) {
         //Añadimos la nueva direccion multicast al grupo multicas correspondiente
         System.out.println("Mensaje de gestion de multicast");
@@ -286,6 +291,17 @@ public class Server implements Runnable {
 
     }
 
+    /**
+     * Crea una nueva lista de comandos para direcciones individuales a partir
+     * de una direccion multicast
+     *
+     * @param listAddress Lista de direcciones contenida en la direccion
+     * multicast
+     * @param tempList Lista temporal
+     * @param command Commando a duplicar para cada una de las direcciones
+     * contenidas en la direccion muticast
+     * @return
+     */
     private ArrayList<Command> createNewMessagesFromMulticast(ArrayList<String> listAddress, ArrayList<Command> tempList, Command command) {
         Iterator<String> itAddress = listAddress.iterator();
         tempList = new ArrayList<Command>();
