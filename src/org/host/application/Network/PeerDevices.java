@@ -6,6 +6,7 @@ package org.host.application.Network;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -208,15 +209,51 @@ public class PeerDevices {
     }
 
     /**
-     * Devuelve una copia de la lista que contiene las direcciones multicast.
+     * Devuelve la configuración direcciones multicast.
      *
      * @return
      */
-    public synchronized HashMap<String, ArrayList<String>> getMulticastList() {
+    public synchronized String getMulticastList() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, ArrayList<String>> item : this.multicastList.entrySet()) {
+            sb.append("\n\n");
+            sb.append("\tLista: \t").append(item.getKey());
+            Iterator<String> it = item.getValue().iterator();
+            while (it.hasNext()) {
+                sb.append("\n");
+                sb.append("\t\t").append(it.next());
+            }
+            sb.append("\n");
+        }
+        //System.out.println(sb.toString());
+        return sb.toString();
+    }
+
+    /**
+     * Devuelve la configuración de una lista multicast.
+     *
+     * @param address
+     * @return
+     */
+    public synchronized String getMulticastList(String address) throws PeerDevicesException {
         HashMap<String, ArrayList<String>> _returnList = new HashMap<String, ArrayList<String>>();
         synchronized (this.multicastList) {
             _returnList.putAll(this.multicastList);
         }
-        return _returnList;
+        StringBuilder sb = new StringBuilder();
+
+        if (_returnList.containsKey(address)) {
+            sb.append("\n\n");
+            sb.append("\tLista: \t").append(address);
+            Iterator<String> it = _returnList.get(address).iterator();
+            while (it.hasNext()) {
+                sb.append("\n");
+                sb.append("\t\t").append(it.next());
+            }
+            sb.append("\n");
+        } else {
+            throw new PeerDevicesException("La dirección " + address + " no es una dirección multicast valida");
+        }
+        return sb.toString();
     }
 }

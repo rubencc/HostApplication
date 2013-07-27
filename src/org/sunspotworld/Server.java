@@ -27,6 +27,7 @@ public class Server implements Runnable {
     private final int ADD_ADDRESS_MULTICAST = 0x70;
     private final int DELETE_ADDRES_MULTICAST = 0x71;
     private final int DELETE_MULTICAST = 0x72;
+    private final int READ_CONFIGURATION_MULTICAST = 0x73;
 
     /**
      * Constructor para el hilo que atendera las peticiones de un cliente.
@@ -64,7 +65,7 @@ public class Server implements Runnable {
                     Message _message = _parserFromJson.parse(_temp);
                     ArrayList<Command> _cmdlistFromClient = _message.getCommands();
                     //Procesa cada uno de los comandos contenidos en el mensaje
-                    processToSendToSpots(_cmdlistFromClient);
+                    processReceiveCommands(_cmdlistFromClient);
                     //Se recogen las respuestas
                     processToSendToClient(_cmdlistFromClient);
                     //Se envian respuestas al cliente
@@ -202,13 +203,13 @@ public class Server implements Runnable {
      *
      * @param cmdlistFromClient
      */
-    private void processToSendToSpots(ArrayList<Command> cmdlistFromClient) {
+    private void processReceiveCommands(ArrayList<Command> cmdlistFromClient) {
         Iterator<Command> it = cmdlistFromClient.iterator();
         ArrayList<Command> _tempList = new ArrayList<Command>();
         //Buscamos si hay comandos en multicast
         while (it.hasNext()) {
             Command _command = it.next();
-            if (_command.getType() == ADD_ADDRESS_MULTICAST || _command.getType() == DELETE_ADDRES_MULTICAST || _command.getType() == DELETE_MULTICAST) {
+            if (_command.getType() == ADD_ADDRESS_MULTICAST || _command.getType() == DELETE_ADDRES_MULTICAST || _command.getType() == DELETE_MULTICAST || _command.getType() == READ_CONFIGURATION_MULTICAST) {
                 manageMulticastConfiguration(_command);
                 it.remove();
             } else {
@@ -265,7 +266,6 @@ public class Server implements Runnable {
      */
     private void manageMulticastConfiguration(Command command) {
         //Añadimos la nueva direccion multicast al grupo multicas correspondiente
-        System.out.println("Mensaje de gestion de multicast");
         Command _command;
         switch (command.getType()) {
             case ADD_ADDRESS_MULTICAST:
@@ -284,6 +284,22 @@ public class Server implements Runnable {
                 this.peerDevices.deleteMulticastList(command.getAddress());
                 _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
                 _command.addValue("Eliminada lista multicast " + command.getValue().get(0));
+                this.cmdListToClient.add(_command);
+                break;
+            case READ_CONFIGURATION_MULTICAST:
+                _command = new Command(command.getAddress(), command.getType(), command.getTime(), command.getGUID(), false);
+                System.out.println(command.toString());
+                if (!_command.getAddress().equals("ALL")) {
+                    System.out.println("Multicast " + _command.getAddress());
+                    try {
+                        _command.addValue(this.peerDevices.getMulticastList(_command.getAddress()));
+                    } catch (PeerDevicesException ex) {
+                        sendErrorToClient(ex.getMessage(), READ_CONFIGURATION_MULTICAST);
+                        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    _command.addValue(this.peerDevices.getMulticastList());
+                }
                 this.cmdListToClient.add(_command);
                 break;
 
