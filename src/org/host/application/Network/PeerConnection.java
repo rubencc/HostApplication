@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.microedition.io.Connector;
@@ -24,6 +25,7 @@ import org.host.application.Entities.Command;
 public class PeerConnection implements Runnable {
 
     private final int PING_PACKET_REPLY = 0x33;
+    private final int QUEUE_ALERT = 0x20;
     private final int HOST_PORT = 100;
     private RadiogramConnection rCon;
     private boolean finish;
@@ -32,11 +34,13 @@ public class PeerConnection implements Runnable {
     //private ArrayList<Command> broadcastCommandList;
     private HashMap<String, Command> individualCommandList;
     private HashMap<String, ArrayList<Command>> broadcastCommandList;
+    private ArrayList<Command> alertQueue;
     private PeerDevices peerDevices;
 
     public PeerConnection() {
-        broadcastCommandList = new HashMap<String, ArrayList<Command>>();
-        individualCommandList = new HashMap<String, Command>();
+        this.broadcastCommandList = new HashMap<String, ArrayList<Command>>();
+        this.individualCommandList = new HashMap<String, Command>();
+        this.alertQueue = new ArrayList<Command>();
         this.peerDevices = PeerDevices.getInstance();
     }
 
@@ -122,6 +126,9 @@ public class PeerConnection implements Runnable {
                     peerDevices.checkDevice(_command.getAddress());
                 }
 
+            } else if (_command.getType() == QUEUE_ALERT) {
+                _command.setGUID(UUID.randomUUID().toString());
+                this.alertQueue.add(_command);
             } else {
                 if (_command.isBroadcast()) {
                     //System.out.println("Hilo peer -- Recibiendo respuestas broadcast" + _command);
@@ -318,5 +325,30 @@ public class PeerConnection implements Runnable {
             this.broadcastCommandList.put(GUID, new ArrayList<Command>());
             this.broadcastCommandList.notifyAll();
         }
+    }
+
+    public synchronized ArrayList<Command> getAlertQueue() {
+        ArrayList<Command> _temp = new ArrayList<Command>();
+        synchronized (this.alertQueue) {
+            _temp.addAll(this.alertQueue);
+            this.alertQueue.clear();
+        }
+        return _temp;
+    }
+
+    public synchronized ArrayList<Command> getAlertQueue(String address) {
+        ArrayList<Command> _temp = new ArrayList<Command>();
+        synchronized (this.alertQueue) {
+            Iterator<Command> it = this.alertQueue.iterator();
+            while (it.hasNext()) {
+                Command _command = it.next();
+                if (_command.getAddress().equals(address)) {
+                    _temp.add(_command);
+                } else {
+                    it.remove();
+                }
+            }
+        }
+        return _temp;
     }
 }

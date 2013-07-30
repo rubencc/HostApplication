@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 
 -->
 
-<project name="TestHostApp" basedir="" default="host-run">
+<project name="HostApp" basedir="" default="host-run">
 
 <!-- You may freely edit this file. See commented blocks below for -->
 <!-- some examples of how to customize the build. -->

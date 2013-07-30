@@ -24,6 +24,7 @@ public class Server implements Runnable {
     private BroadcastConnection bCon;
     private ArrayList<Command> cmdListToClient;
     private PeerDevices peerDevices;
+    private final int QUEUE_ALERT = 0x20;
     private final int ADD_ADDRESS_MULTICAST = 0x70;
     private final int DELETE_ADDRES_MULTICAST = 0x71;
     private final int DELETE_MULTICAST = 0x72;
@@ -211,6 +212,13 @@ public class Server implements Runnable {
             Command _command = it.next();
             if (_command.getType() == ADD_ADDRESS_MULTICAST || _command.getType() == DELETE_ADDRES_MULTICAST || _command.getType() == DELETE_MULTICAST || _command.getType() == READ_CONFIGURATION_MULTICAST) {
                 manageMulticastConfiguration(_command);
+                it.remove();
+            } else if (_command.getType() == QUEUE_ALERT) {
+                if (_command.isBroadcast()) {
+                    this.cmdListToClient.addAll(this.pCon.getAlertQueue());
+                } else {
+                    this.cmdListToClient.addAll(this.pCon.getAlertQueue(_command.getAddress()));
+                }
                 it.remove();
             } else {
                 ArrayList<String> _listAddress = this.peerDevices.isMulticastAddress(_command.getAddress());

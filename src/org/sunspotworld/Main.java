@@ -1,6 +1,5 @@
 package org.sunspotworld;
 
-import org.host.application.Network.PassiveCheckNetworkStatus;
 import org.host.application.Network.BroadcastConnection;
 import org.host.application.Network.PeerConnection;
 import java.net.ServerSocket;
@@ -13,7 +12,6 @@ import java.util.Timer;
 public class Main {
 
     private static final int SOCKET_LISTEN_PORT = 2000;
-    private PassiveCheckNetworkStatus ntPassive;
     private Timer timer;
 
     private void run() throws Exception {
