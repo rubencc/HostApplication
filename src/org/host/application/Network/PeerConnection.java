@@ -13,7 +13,7 @@ import javax.microedition.io.Datagram;
 import org.host.application.Entities.Command;
 
 /**
- * Envia o recibe mediante la conexion de tipo peer. Mantiene una lista de
+ * Clase de instancia unica que gestion la conexión peer. Mantiene una lista de
  * dispositivos activos en la clase PeerDevices.
  *
  * @author rubencc

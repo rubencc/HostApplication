@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.host.application.Network;
 
 import java.io.IOException;
@@ -14,8 +10,7 @@ import javax.microedition.io.DatagramConnection;
 import org.host.application.Entities.Command;
 
 /**
- * Establece una conexion de broadcast en el puerto 66 para enviar informacio a
- * todos los dispositivos escuchando en dicho puerto.
+ * Clase de instancia unica que gestiona la conexiñon broadcast
  *
  * @author rubencc
  */
