@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ * Clase que convierte el valor de ticks en formato de fecha estandar
  *
  * @author rubencc
  */
@@ -17,7 +18,7 @@ public class DateHelper {
      * Convierte la marca de tiempo de tipo ticks en un string formateado.
      *
      * @param time
-     * @return
+     * @return Fecha formateada
      */
     public static String convertLongToString(long time) {
         Date _time = new Date(time);
