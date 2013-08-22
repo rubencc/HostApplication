@@ -1,10 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.sunspotworld;
 
 /**
+ * Clase que atiende las peticiones de un cliente
  *
  * @author rubencc
  */
@@ -30,12 +27,6 @@ public class Server implements Runnable {
     private final int DELETE_MULTICAST = 0x72;
     private final int READ_CONFIGURATION_MULTICAST = 0x73;
 
-    /**
-     * Constructor para el hilo que atendera las peticiones de un cliente.
-     *
-     * @param socket - Socket de atencion a la nueva peticion.
-     *
-     */
     public Server(Socket socket, BroadcastConnection bCon, PeerConnection pCon) {
         this.ps = new ProcessSocket(socket);
         this.bCon = bCon;
@@ -63,7 +54,9 @@ public class Server implements Runnable {
                 if (!this.ps.isSocketClosed() && _temp != null) {
                     System.out.println("[Recibido por socket] " + _temp);
                     ParserFromJson _parserFromJson = new ParserFromJson();
+                    //Obtiene el mensaje despues de parsearlo
                     Message _message = _parserFromJson.parse(_temp);
+                    //Obtiene los comandos enviando en el mensaje
                     ArrayList<Command> _cmdlistFromClient = _message.getCommands();
                     //Procesa cada uno de los comandos contenidos en el mensaje
                     processReceiveCommands(_cmdlistFromClient);
@@ -95,8 +88,6 @@ public class Server implements Runnable {
             //Envia en modo broadcast         
             try {
                 this.bCon.SendBroadcast(command);
-                //Se añade al mapa el GUID de esta peticion para esperar sus resultados
-                //this.pCon.addGUIDforBroadcastReply(command.getGUID());
                 result = true;
             } catch (BroadcastConnectionException ex) {
                 //Si no se puede enviar mediante la conexion broadcast
@@ -143,8 +134,8 @@ public class Server implements Runnable {
     /**
      * Envia una mensaje de error al cliente
      *
-     * @param error
-     * @param type
+     * @param error -- Mensaje de error
+     * @param type -- Tipo de error
      */
     private void sendErrorToClient(String error, int type) {
         System.out.println(error);
@@ -155,6 +146,11 @@ public class Server implements Runnable {
         sendToClient(this.cmdListToClient);
     }
 
+    /**
+     * Recupera las respuestas a un mensaje broadcast
+     *
+     * @param command
+     */
     private void getBroadcastReplies(Command command) {
         //System.out.println("Esperando broadcast\n" + command);
         ArrayList<Command> _commandListFromSpot = null;
