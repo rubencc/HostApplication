@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.host.application.Entities;
 
 import java.util.ArrayList;
@@ -10,13 +6,15 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
+ * Clase que parsea a formato JSON una entidad Message y sus correspondientes
+ * comandos
  *
  * @author rubencc
  */
 public class ParserToJson {
 
     /**
-     * Parsea una lista de comando para formar un mensaje en formato JSON
+     * Parsea una lista de comandos para formar un mensaje en formato JSON
      *
      * @param commandList
      * @return

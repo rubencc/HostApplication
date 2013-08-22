@@ -1,14 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.host.application.Entities;
 
 import java.util.ArrayList;
 
 /**
- * Entiedad de mensaje que se usara al parsear mensajes desde JSON o al recibir
- * datos desde spot.
+ * Clase que modela la entidad de mensaje que se usara al parsear mensajes desde
+ * JSON o al recibir datos desde spot.
  *
  * @author rubencc
  */

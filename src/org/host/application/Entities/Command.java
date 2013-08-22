@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 /**
  *
- * Entidad de comando para enviar o recibir a un spot.
+ * Clase que modela la entidad de comando para enviar o recibir a un spot.
  *
  * @author rubencc
  */
