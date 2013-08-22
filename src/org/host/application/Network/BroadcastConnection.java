@@ -21,12 +21,18 @@ import org.host.application.Entities.Command;
  */
 public class BroadcastConnection implements Runnable {
 
+    //Puerto de la conexión broadcast
     private static final int BROADCAST_PORT = 66;
     private static final int PING_PACKET_REQUEST = 0x30;
+    //Datagrama
     private Datagram sendDg;
+    //Conexión broadcast
     private DatagramConnection bCon;
+    //Condición para terminar
     private boolean finish;
+    //Condición de disponibilidad
     private boolean ready;
+    //Instnacia del gestor de dispostivios
     private PeerDevices peerDevices = PeerDevices.getInstance();
     private Command cmdPing;
 
@@ -34,23 +40,23 @@ public class BroadcastConnection implements Runnable {
         finish = true;
         try {
             //Abre la conexion en modo broadcast
-            bCon = (DatagramConnection) Connector.open("radiogram://broadcast:" + BROADCAST_PORT);
-            sendDg = bCon.newDatagram(bCon.getMaximumLength());
-            cmdPing = new Command(PING_PACKET_REQUEST);
+            this.bCon = (DatagramConnection) Connector.open("radiogram://broadcast:" + this.BROADCAST_PORT);
+            this.sendDg = this.bCon.newDatagram(bCon.getMaximumLength());
+            this.cmdPing = new Command(PING_PACKET_REQUEST);
         } catch (IOException ex) {
             Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         //Mientras no se indique terminacion del hilo: 
-        while (finish) {
+        while (this.finish) {
             try {
-                //Cada 2.5s se envia un paquete con el texto "Hello".
+                //Cada 5s se envia un paquete de ping
                 Thread.sleep(5000);
-                SendBroadcast(cmdPing);
-                peerDevices.checkAllDevices();
+                SendBroadcast(this.cmdPing);
+                this.peerDevices.checkAllDevices();
                 //Pasado el primer ciclo de espera la conexion esta completamente disposible
-                if (!ready) {
-                    ready = true;
+                if (!this.ready) {
+                    this.ready = true;
                 }
             } catch (InterruptedException ex) {
                 Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
@@ -62,7 +68,7 @@ public class BroadcastConnection implements Runnable {
     }
 
     /**
-     * Termina la ejecucion del bucle para terminar la ejecion de hilo.
+     * Termina la ejecucion del bucle para terminar la ejecion de hilo
      */
     public synchronized void FinishThread() {
         this.finish = false;
@@ -73,14 +79,14 @@ public class BroadcastConnection implements Runnable {
      */
     public synchronized void CloseBroadcastConnection() {
         try {
-            bCon.close();
+            this.bCon.close();
         } catch (IOException ex) {
             Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     /**
-     * Envia un mensaje a traves de la conexion broadcast.
+     * Envia un mensaje a traves de la conexion broadcast
      *
      * @param command
      * @return
@@ -89,31 +95,23 @@ public class BroadcastConnection implements Runnable {
         boolean _sendCond = true;
         try {
             //Si la conexion esta completamente disponible
-
-            if (ready) {
+            if (this.ready) {
                 //System.out.println("Enviando [" + command.getType() + " " + command.getValue() + "] en broadcast" + "[" + command.getGUID() + "]");
-
-                sendDg.reset();
-                /*El formato de la PDU es {tipo, valor, guid}*/
-                sendDg.writeInt(command.getType());
-                if (command.getValue() != null) {
-                    sendDg.writeInt(command.countValues());
+                this.sendDg.reset();
+                /*El formato de la PDU es {tipo,tamaño, valor, guid}*/
+                this.sendDg.writeInt(command.getType());
+                if ((command.getValue() != null) && (command.getGUID() != null)) {
+                    this.sendDg.writeInt(command.countValues());
                     Iterator it = command.getValue().iterator();
                     while (it.hasNext()) {
-                        sendDg.writeUTF((String) it.next());
+                        this.sendDg.writeUTF((String) it.next());
                     }
-
-                } else {
-                    _sendCond = false;
-                }
-                if (command.getGUID() != null) {
-                    sendDg.writeUTF(command.getGUID());
+                    this.sendDg.writeUTF(command.getGUID());
                 } else {
                     _sendCond = false;
                 }
                 if (_sendCond) {
-                    bCon.send(sendDg);
-
+                    this.bCon.send(this.sendDg);
                 } else {
                     throw new BroadcastConnectionException("Los campos de la PDU no son correctos");
                 }

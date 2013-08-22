@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.host.application.Network;
 
 import java.util.ArrayList;
@@ -10,14 +6,17 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
+ * Clase de instancia unica para la gestión de los dispostivos
  *
  * @author rubencc
  */
 public class PeerDevices {
 
+    //Colección para almacenar la dirección de los dispositivos y el numero de veces que no han respondido
     private HashMap<String, Integer> devices;
+    //Colección para almacenar las listas multicast
     private HashMap<String, ArrayList<String>> multicastList;
-    //Patron singleton para garantizar que solo hay un objeto de este tipo.
+    //Instancia de la clase
     private static PeerDevices INSTANCE = new PeerDevices();
 
     private PeerDevices() {
@@ -30,11 +29,11 @@ public class PeerDevices {
     }
 
     /**
-     * Añade una nueva direcion de red al mapa
+     * Añade una nueva dirección de red a la colección
      *
-     * @param address
+     * @param address -- Dirección del dispostivio
      */
-    public synchronized void add(String address) {
+    public synchronized void addDevice(String address) {
         synchronized (this.devices) {
             this.devices.put(address, 0);
             System.out.println("Nuevo dispositivo: " + address);
@@ -42,11 +41,11 @@ public class PeerDevices {
     }
 
     /**
-     * Elimina una direccion de red del mapa
+     * Elimina una direccion de red de la colección
      *
-     * @param address
+     * @param address -- Dirección del dispostivio
      */
-    public synchronized void remove(String address) {
+    public synchronized void removeDevice(String address) {
         synchronized (this.devices) {
             this.devices.remove(address);
         }
@@ -68,7 +67,7 @@ public class PeerDevices {
     }
 
     /**
-     * Si un elemento del mapa tiene un valor superior en su contador a 2 es
+     * Si un elemento del mapa tiene un valor superior en su contador a 5 es
      * eliminado.
      */
     public synchronized void checkAllDevices() {
@@ -101,9 +100,9 @@ public class PeerDevices {
     }
 
     /**
-     * Comprueba si una direccion de dispositivo existe en el mapa.
+     * Comprueba si una direccion de dispositivo existe en la colección
      *
-     * @param address
+     * @param address -- Dirección del dispostivio
      * @return
      */
     public synchronized boolean existDevices(String address) {
@@ -142,56 +141,56 @@ public class PeerDevices {
     /**
      * Añade la direccion de un host a una lista de multicast
      *
-     * @param multicasAddress
-     * @param hostAddress
+     * @param multicasAddress -- Lista de multicast
+     * @param deviceAddress -- Dirección del dispostivio
      */
-    public synchronized void addToMulticast(String multicasAddress, String hostAddress) {
+    public synchronized void addToMulticast(String multicasAddress, String deviceAddress) {
         if (this.multicastList.containsKey(multicasAddress)) {
             ArrayList<String> _temp = this.multicastList.get(multicasAddress);
-            if (!_temp.contains(hostAddress) && !this.multicastList.containsKey(hostAddress)) {
-                _temp.add(hostAddress);
-                //System.out.println("Creando nueva entrada en multicast " + multicasAddress + " para " + hostAddress);
+            if (!_temp.contains(deviceAddress) && !this.multicastList.containsKey(deviceAddress)) {
+                _temp.add(deviceAddress);
+                //System.out.println("Creando nueva entrada en multicast " + multicasAddress + " para " + deviceAddress);
             } else {
                 System.out.println("Entrada ya contenida multicast ");
             }
         } else {
-            //System.out.println("Añadiendo: " + hostAddress + " a la lista multicast: " + multicasAddress);
+            //System.out.println("Añadiendo: " + deviceAddress + " a la lista multicast: " + multicasAddress);
             ArrayList<String> _temp = new ArrayList<String>();
-            _temp.add(hostAddress);
+            _temp.add(deviceAddress);
             this.multicastList.put(multicasAddress, _temp);
         }
 
     }
 
     /**
-     * Elimina una direccion de host de una lista multicast
+     * Elimina una direccion de dispostivo de una lista multicast
      *
-     * @param multicasAddress
-     * @param hostAddress
+     * @param multicasAddress -- Lista de multicast
+     * @param deviceAddress -- Dirección del dispostivio
      */
-    public synchronized void deleteFromMulticast(String multicasAddress, String hostAddress) {
+    public synchronized void deleteFromMulticast(String multicasAddress, String deviceAddress) {
         if (this.multicastList.containsKey(multicasAddress)) {
-            //System.out.println("Eliminando entrada multicast para: " + multicasAddress + " -- " + hostAddress);
+            //System.out.println("Eliminando entrada multicast para: " + multicasAddress + " -- " + deviceAddress);
             ArrayList<String> _temp = this.multicastList.get(multicasAddress);
-            _temp.remove(hostAddress);
+            _temp.remove(deviceAddress);
         } else {
-            //System.out.println("La direccion: " + hostAddress + " no pertenece al multicast " + multicasAddress);
+            //System.out.println("La direccion: " + deviceAddress + " no pertenece al multicast " + multicasAddress);
         }
     }
 
     /**
      * Comprueba si una direccion es multicast
      *
-     * @param hostAddress
+     * @param deviceAddress -- Dirección del dispostivio
      * @return
      */
-    public synchronized ArrayList<String> isMulticastAddress(String hostAddress) {
-        if (this.multicastList.containsKey(hostAddress)) {
-            //System.out.println(hostAddress + " es multicast");
-            ArrayList<String> _temp = this.multicastList.get(hostAddress);
+    public synchronized ArrayList<String> isMulticastAddress(String deviceAddress) {
+        if (this.multicastList.containsKey(deviceAddress)) {
+            //System.out.println(deviceAddress + " es multicast");
+            ArrayList<String> _temp = this.multicastList.get(deviceAddress);
             return _temp;
         } else {
-            //System.out.println(hostAddress + " no es multicast");
+            //System.out.println(deviceAddress + " no es multicast");
             return null;
         }
     }
@@ -199,7 +198,7 @@ public class PeerDevices {
     /**
      * Elimina una lista de multicast
      *
-     * @param multicasAddress
+     * @param multicasAddress -- Lista multicast
      */
     public synchronized void deleteMulticastList(String multicasAddress) {
         if (this.multicastList.containsKey(multicasAddress)) {
@@ -209,7 +208,7 @@ public class PeerDevices {
     }
 
     /**
-     * Devuelve la configuración direcciones multicast.
+     * Devuelve la configuración de direcciones multicast
      *
      * @return
      */
@@ -230,7 +229,7 @@ public class PeerDevices {
     }
 
     /**
-     * Devuelve la configuración de una lista multicast.
+     * Devuelve la configuración de una lista multicast
      *
      * @param address
      * @return

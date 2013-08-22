@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.host.application.Network;
 
 import com.sun.spot.io.j2me.radiogram.RadiogramConnection;
@@ -26,15 +22,23 @@ public class PeerConnection implements Runnable {
 
     private final int PING_PACKET_REPLY = 0x33;
     private final int QUEUE_ALERT = 0x20;
+    //Puerto para la conexion peer
     private final int HOST_PORT = 100;
+    //Conexión peer
     private RadiogramConnection rCon;
+    //Condición para terminar
     private boolean finish;
+    //Datagrama de envío
     private Datagram sendDg = null;
+    //Datagrama de recepción
     private Datagram receiveDg = null;
-    //private ArrayList<Command> broadcastCommandList;
+    //Colección para almacenar respuestas individuales
     private HashMap<String, Command> individualCommandList;
+    //Colección para almacenar respuestas a mensajes de tipo broadcast
     private HashMap<String, ArrayList<Command>> broadcastCommandList;
+    //Colección para almacenar alertas
     private ArrayList<Command> alertQueue;
+    //Instancia del gestor de dispostivios
     private PeerDevices peerDevices;
 
     public PeerConnection() {
@@ -121,47 +125,29 @@ public class PeerConnection implements Runnable {
                 //Si el dispositivo no existe se añade a la lista
                 //En caso de existir se decrementa su contador
                 if (!peerDevices.existDevices(_command.getAddress())) {
-                    peerDevices.add(_command.getAddress());
+                    peerDevices.addDevice(_command.getAddress());
                 } else {
                     peerDevices.checkDevice(_command.getAddress());
                 }
 
             } else if (_command.getType() == QUEUE_ALERT) {
+                //La PDU se almacena en la cola de alertas
                 _command.setGUID(UUID.randomUUID().toString());
                 this.alertQueue.add(_command);
             } else {
                 if (_command.isBroadcast()) {
-                    //System.out.println("Hilo peer -- Recibiendo respuestas broadcast" + _command);
-                    synchronized (this.broadcastCommandList) {
-                        if (this.broadcastCommandList.containsKey(_command.getGUID())) {
-                            //System.out.println("Elemento añadido a la lista " + _command.getGUID() + " " + _command.getAddress());
-                            ArrayList<Command> _tempList = this.broadcastCommandList.get(_command.getGUID());
-                            synchronized (_tempList) {
-                                _tempList.add(_command);
-                                _tempList.notify();
-                            }
-                        } else {
-                            //System.out.println("Elemento añadido a la nueva lista " + _command.getGUID() + " " + _command.getAddress());
-                            ArrayList<Command> _tempList = new ArrayList<Command>();
-                            _tempList.add(_command);
-                            this.broadcastCommandList.put(_command.getGUID(), _tempList);
-                        }
-
-                        this.broadcastCommandList.notify();
-                    }
+                    //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión broadcast
+                    addBroadcastResponse(_command);
                 } else {
+                    //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión peer
                     synchronized (this.individualCommandList) {
                         this.individualCommandList.put(_command.getGUID(), _command);
                         this.individualCommandList.notify();
                     }
                 }
             }
-
-
-        } catch (com.sun.spot.peripheral.TimeoutException te) {
-            System.err.println("Ningun dispositivo conectado");
         } catch (Exception e) {
-            System.err.println(e + " mientras se leia la conexion peer");
+            System.err.println(e.getMessage() + " mientras se leia la conexion peer");
         }
     }
 
@@ -174,7 +160,7 @@ public class PeerConnection implements Runnable {
     private Command readDatagram(Datagram receiveDg) {
         Command _command = null;
         try {
-            /*El formato de la PDU es {direccion, tipo, valor, tiempo, guid, broadcast}*/
+            //El formato de la PDU es {direccion, tipo, valor, tiempo, guid, broadcast}
             String _address = receiveDg.readUTF();
             int _type = receiveDg.readInt();
             int _count = receiveDg.readInt();
@@ -195,6 +181,34 @@ public class PeerConnection implements Runnable {
     }
 
     /**
+     * Añade una respuesta a la collección correspondiente
+     *
+     * @param _command
+     */
+    private void addBroadcastResponse(Command _command) {
+        //System.out.println("Hilo peer -- Recibiendo respuestas broadcast" + _command);
+        synchronized (this.broadcastCommandList) {
+            if (this.broadcastCommandList.containsKey(_command.getGUID())) {
+                /*Si ya existen respuestas de otros dispostivios a este mensaje broadcast se almacenan en la colección 
+                 correspondiente, si no se crea y se almacena*/
+                //System.out.println("Elemento añadido a la lista " + _command.getGUID() + " " + _command.getAddress());
+                ArrayList<Command> _tempList = this.broadcastCommandList.get(_command.getGUID());
+                synchronized (_tempList) {
+                    _tempList.add(_command);
+                    _tempList.notify();
+                }
+            } else {
+                //System.out.println("Elemento añadido a la nueva lista " + _command.getGUID() + " " + _command.getAddress());
+                ArrayList<Command> _tempList = new ArrayList<Command>();
+                _tempList.add(_command);
+                this.broadcastCommandList.put(_command.getGUID(), _tempList);
+            }
+
+            this.broadcastCommandList.notify();
+        }
+    }
+
+    /**
      * Envia un datagrama a la direccion indicada
      *
      * @param message
@@ -206,30 +220,13 @@ public class PeerConnection implements Runnable {
         try {
             this.sendDg.reset();
             //Se establece la direccion del dispostivo de destino
-            if (command.getAddress() != null) {
-                this.sendDg.setAddress(command.getAddress());
+            if ((command.getAddress() != null) && (command.getValue() != null) && (command.getGUID() != null)) {
+                writeDatagram(command);
             } else {
                 _sendCond = false;
             }
-            /*El formato de la PDU es {tipo, valor, guid}*/
-            this.sendDg.writeInt(command.getType());
-            if (command.getValue() != null) {
-                this.sendDg.writeInt(command.countValues());
-                Iterator it = command.getValue().iterator();
-                while (it.hasNext()) {
-                    this.sendDg.writeUTF((String) it.next());
-                }
-
-            } else {
-                _sendCond = false;
-            }
-            if (command.getGUID() != null) {
-                this.sendDg.writeUTF(command.getGUID());
-            } else {
-                _sendCond = false;
-            }
-        } catch (Exception e) {
-            throw new PeerConnectionException("El dispositivo no esta conectado o la direccion multicast no es valida");
+        } catch (IOException e) {
+            throw new PeerConnectionException("Error al formar la PDU --" + e.getMessage());
         }
 
         try {
@@ -247,12 +244,27 @@ public class PeerConnection implements Runnable {
                 }
 
             }
-        } catch (com.sun.spot.peripheral.TimeoutException te) {
-            System.err.println("Ningun dispositivo conectado");
         } catch (IOException ex) {
             Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
         return _temp;
+    }
+
+    /**
+     * Escribe los campos de un comando en el datagram
+     *
+     * @param command -- Comando a enviar
+     * @throws IOException
+     */
+    private void writeDatagram(Command command) throws IOException {
+        this.sendDg.setAddress(command.getAddress());
+        this.sendDg.writeInt(command.getType());
+        this.sendDg.writeInt(command.countValues());
+        Iterator it = command.getValue().iterator();
+        while (it.hasNext()) {
+            this.sendDg.writeUTF((String) it.next());
+        }
+        this.sendDg.writeUTF(command.getGUID());
     }
 
     /**
@@ -270,7 +282,7 @@ public class PeerConnection implements Runnable {
      * aun no se ha recibido su respuesta.
      *
      * @param GUID
-     * @return
+     * @return Comando
      */
     public synchronized Command getIndividualCommand(String GUID) {
         synchronized (this.individualCommandList) {
@@ -294,7 +306,7 @@ public class PeerConnection implements Runnable {
      * Devuelve la lista de comandos asociados a ese GUID
      *
      * @param GUID
-     * @return
+     * @return Lista de comandos
      */
     public synchronized ArrayList<Command> getBroadcastCommandList(String GUID) {
         synchronized (this.broadcastCommandList) {
@@ -303,7 +315,7 @@ public class PeerConnection implements Runnable {
     }
 
     /**
-     * Elimina una lista de comandos del hashmap en funcion de su GUID
+     * Elimina una lista de comandos de la colección en funcion de su GUID
      *
      * @param GUID
      */
@@ -327,6 +339,11 @@ public class PeerConnection implements Runnable {
         }
     }
 
+    /**
+     * Obtiene todas las alertas contenidas en la cola de alertas
+     *
+     * @return Lista de alertas
+     */
     public synchronized ArrayList<Command> getAlertQueue() {
         ArrayList<Command> _temp = new ArrayList<Command>();
         synchronized (this.alertQueue) {
@@ -336,6 +353,12 @@ public class PeerConnection implements Runnable {
         return _temp;
     }
 
+    /**
+     * Obtiene la lista de alertas de una dirección en concreto
+     *
+     * @param address -- Dirección a consultar
+     * @return Lista de alertas
+     */
     public synchronized ArrayList<Command> getAlertQueue(String address) {
         ArrayList<Command> _temp = new ArrayList<Command>();
         synchronized (this.alertQueue) {
