@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.sunspotworld;
 
 import java.io.DataInputStream;
@@ -11,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 /**
+ * Clase que gestiona la conexión mediante socket
  *
  * @author rubencc
  */
@@ -20,13 +17,6 @@ public class ProcessSocket {
     private DataOutputStream oBuf;
     private DataInputStream iBuf;
 
-    /**
-     * Constructor para el conjunto de funciones que realiza el el hilo que
-     * atiende la peticion.
-     *
-     * @param socket - Socket conectado con el cliente
-     *
-     */
     protected ProcessSocket(Socket socket) {
         this.socket = socket;
         try {
