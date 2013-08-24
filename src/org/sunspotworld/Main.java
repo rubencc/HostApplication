@@ -29,7 +29,7 @@ public class Main {
         while (true) {
             _socket = _ssocket.accept();
             if (_socket != null) {
-                System.out.println("Conexion establecida en puerto: " + _socket.getLocalPort());
+                //System.out.println("Conexion establecida en puerto: " + _socket.getLocalPort());
                 //Se lanza un nuevo hilo para antender la peticion
                 _serverTread = new Server(_socket, _bCon, _pCon);
                 new Thread(_serverTread).start();

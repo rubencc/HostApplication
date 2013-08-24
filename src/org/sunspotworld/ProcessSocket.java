@@ -79,7 +79,7 @@ public class ProcessSocket {
      */
     protected void close() {
         try {
-            System.out.println("Socket Cerrado");
+            //System.out.println("Socket Cerrado");
             this.iBuf.close();
             this.oBuf.close();
             this.socket.close();
