@@ -2,6 +2,7 @@ package org.host.application.Network;
 
 import com.sun.spot.io.j2me.radiogram.RadiogramConnection;
 import java.io.IOException;
+import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -227,6 +228,8 @@ public class PeerConnection implements Runnable {
             }
         } catch (IOException e) {
             throw new PeerConnectionException("Error al formar la PDU --" + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new PeerConnectionException("Error al formar la PDU --" + e.getMessage());
         }
 
         try {
@@ -256,7 +259,7 @@ public class PeerConnection implements Runnable {
      * @param command -- Comando a enviar
      * @throws IOException
      */
-    private void writeDatagram(Command command) throws IOException {
+    private void writeDatagram(Command command) throws IOException, IllegalArgumentException {
         this.sendDg.setAddress(command.getAddress());
         this.sendDg.writeInt(command.getType());
         this.sendDg.writeInt(command.countValues());
