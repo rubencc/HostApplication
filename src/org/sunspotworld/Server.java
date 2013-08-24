@@ -52,7 +52,7 @@ public class Server implements Runnable {
             //System.out.println("[Recibido socket] " + _temp);
             if (!peerDevices.isEmpty()) {
                 if (!this.ps.isSocketClosed() && _temp != null) {
-                    System.out.println("[Recibido por socket] " + _temp);
+                    //System.out.println("[Recibido por socket] " + _temp);
                     ParserFromJson _parserFromJson = new ParserFromJson();
                     //Obtiene el mensaje despues de parsearlo
                     Message _message = _parserFromJson.parse(_temp);
@@ -67,13 +67,13 @@ public class Server implements Runnable {
                     this.cmdListToClient.clear();
                 }
             } else {
-                System.out.println("Enviando error al cliente");
+                //System.out.println("Enviando error al cliente");
                 sendErrorToClient("No devices", 0);
                 _runCond = false;
             }
         }
 
-        System.out.println("Hilo terminado");
+        //System.out.println("Hilo terminado");
     }
 
     /**
