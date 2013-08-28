@@ -1,8 +1,6 @@
 package org.host.application.Entities;
 
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -48,7 +46,6 @@ public class ParserFromJson {
                 _message.AddCommand(_comm);
             }
         } catch (ParseException ex) {
-            Logger.getLogger(ParserFromJson.class.getName()).log(Level.SEVERE, null, ex);
         }
         return _message;
     }

@@ -11,8 +11,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Server implements Runnable {
 
@@ -138,7 +136,7 @@ public class Server implements Runnable {
      * @param type -- Tipo de error
      */
     private void sendErrorToClient(String error, int type) {
-        System.out.println(error);
+        //System.out.println(error);
         ArrayList<String> _tempList = new ArrayList<String>();
         _tempList.add(error);
         Command _cmd = new Command("ERROR", type, _tempList, System.currentTimeMillis());
@@ -165,8 +163,6 @@ public class Server implements Runnable {
                 try {
                     _commandListFromSpot.wait();
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(Server.class
-                            .getName()).log(Level.SEVERE, null, ex);
                 }
             }
             //Copiamos toda la lista de elementos para esa peticion
@@ -292,14 +288,11 @@ public class Server implements Runnable {
                 break;
             case READ_CONFIGURATION_MULTICAST:
                 _command = new Command(command.getAddress(), command.getType(), command.getTime(), command.getGUID(), false);
-                System.out.println(command.toString());
                 if (!_command.getAddress().equals("ALL")) {
-                    System.out.println("Multicast " + _command.getAddress());
                     try {
                         _command.addValue(this.peerDevices.getMulticastList(_command.getAddress()));
                     } catch (PeerDevicesException ex) {
                         sendErrorToClient(ex.getMessage(), READ_CONFIGURATION_MULTICAST);
-                        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } else {
                     _command.addValue(this.peerDevices.getMulticastList());
