@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * Clase que convierte el valor de ticks en formato de fecha estandar
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class DateHelper {
 

@@ -3,8 +3,9 @@ package org.sunspotworld;
 /**
  * Clase que atiende las peticiones de un cliente
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
+import Helpers.LogHelper;
 import org.host.application.Entities.*;
 import org.host.application.Network.*;
 import java.net.Socket;
@@ -24,6 +25,8 @@ public class Server implements Runnable {
     private final int DELETE_ADDRES_MULTICAST = 0x71;
     private final int DELETE_MULTICAST = 0x72;
     private final int READ_CONFIGURATION_MULTICAST = 0x73;
+    private final String CLASSNAME = getClass().getName();
+    private LogHelper logger;
 
     public Server(Socket socket, BroadcastConnection bCon, PeerConnection pCon) {
         this.ps = new ProcessSocket(socket);
@@ -31,7 +34,7 @@ public class Server implements Runnable {
         this.pCon = pCon;
         this.cmdListToClient = new ArrayList<Command>();
         this.peerDevices = PeerDevices.getInstance();
-
+        this.logger = LogHelper.getInstance();
     }
 
     /**
@@ -42,18 +45,19 @@ public class Server implements Runnable {
      */
     @Override
     public void run() {
+
         String _temp;
         boolean _runCond = true;
         while (!this.ps.isSocketClosed() && _runCond) {
-            //Recibir dato desde el socket del cliente
+            //Recibe dato desde el socket del cliente
             _temp = this.ps.recive();
-            //System.out.println("[Recibido socket] " + _temp);
             if (!peerDevices.isEmpty()) {
                 if (!this.ps.isSocketClosed() && _temp != null) {
-                    //System.out.println("[Recibido por socket] " + _temp);
+                    this.logger.logINFO(CLASSNAME, "run", "New message from client");
                     ParserFromJson _parserFromJson = new ParserFromJson();
                     //Obtiene el mensaje despues de parsearlo
                     Message _message = _parserFromJson.parse(_temp);
+                    //this.logger.logINFO(CLASSNAME, "Message", _message.toString());
                     //Obtiene los comandos enviando en el mensaje
                     ArrayList<Command> _cmdlistFromClient = _message.getCommands();
                     //Procesa cada uno de los comandos contenidos en el mensaje
@@ -65,7 +69,6 @@ public class Server implements Runnable {
                     this.cmdListToClient.clear();
                 }
             } else {
-                //System.out.println("Enviando error al cliente");
                 sendErrorToClient("No devices", 0);
                 _runCond = false;
             }
@@ -83,10 +86,10 @@ public class Server implements Runnable {
     private boolean sendToSpot(Command command) {
         boolean result = false;
         if (command.isBroadcast()) {
-            //Envia en modo broadcast         
             try {
                 this.bCon.SendBroadcast(command);
                 result = true;
+                this.logger.logINFO(CLASSNAME, "sendToSpot -- Broadcast", "Sendt to spot in broadcast");
             } catch (BroadcastConnectionException ex) {
                 //Si no se puede enviar mediante la conexion broadcast
                 //se crea un mensaje de error y se añade a la lista de respuestas
@@ -94,12 +97,14 @@ public class Server implements Runnable {
                 _tempList.add(ex.getMessage());
                 this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), _tempList, System.currentTimeMillis(), command.getGUID(), true));
                 result = false;
+                this.logger.logSEVERE(CLASSNAME, "sendToSpot -- BroadcastConnectionException", ex.getMessage());
             }
         } else {
             try {
                 //Envia en modo peer
                 this.pCon.Send(command);
                 result = true;
+                this.logger.logINFO(CLASSNAME, "sendToSpot -- Peer", "Sendt to spot in peer");
             } catch (PeerConnectionException ex) {
                 //Si el dispositivo no esta conectado se ha generado la excepcion
                 //y se envia una entidad comando en respuesta indicando el error.
@@ -107,6 +112,7 @@ public class Server implements Runnable {
                 _tempList.add(ex.getMessage());
                 this.cmdListToClient.add(new Command(command.getAddress(), command.getType(), _tempList, System.currentTimeMillis(), command.getGUID(), false));
                 result = false;
+                this.logger.logSEVERE(CLASSNAME, "sendToSpot -- PeerConnectionException", ex.getMessage());
             }
         }
         return result;
@@ -127,6 +133,7 @@ public class Server implements Runnable {
         //Envia respues al cliente a traves del socket
         //System.out.println("Enviando a cliente:" + _temp);
         this.ps.send(_temp);
+        this.logger.logINFO(CLASSNAME, "sendToClient", "Send replies to client");
     }
 
     /**
@@ -142,6 +149,7 @@ public class Server implements Runnable {
         Command _cmd = new Command("ERROR", type, _tempList, System.currentTimeMillis());
         this.cmdListToClient.add(_cmd);
         sendToClient(this.cmdListToClient);
+        this.logger.logINFO(CLASSNAME, "sendErrorToClient", "Send error to client");
     }
 
     /**
@@ -150,7 +158,6 @@ public class Server implements Runnable {
      * @param command
      */
     private void getBroadcastReplies(Command command) {
-        //System.out.println("Esperando broadcast\n" + command);
         ArrayList<Command> _commandListFromSpot = null;
         do {
             _commandListFromSpot = this.pCon.getBroadcastCommandList(command.getGUID());
@@ -163,6 +170,7 @@ public class Server implements Runnable {
                 try {
                     _commandListFromSpot.wait();
                 } catch (InterruptedException ex) {
+                    this.logger.logSEVERE(CLASSNAME, "getBroadcastReplies -- InterruptedException", ex.getMessage());
                 }
             }
             //Copiamos toda la lista de elementos para esa peticion
@@ -170,7 +178,7 @@ public class Server implements Runnable {
             //Eliminamos la lista y la entrada en el hashmap.
             this.pCon.deleteBroadcastCommandList(command.getGUID());
         }
-
+        this.logger.logINFO(CLASSNAME, "getBroadcastReplies", "Getting broadcast replies");
     }
 
     /**
@@ -189,6 +197,7 @@ public class Server implements Runnable {
         } while (_tempCommand == null);
         this.cmdListToClient.add(_tempCommand);
         this.pCon.deleteIndividualCommamd(command.getGUID());
+        this.logger.logINFO(CLASSNAME, "getNoBroadcastReplies", "Getting no broadcast replies");
     }
 
     /**
@@ -205,11 +214,14 @@ public class Server implements Runnable {
             if (_command.getType() == ADD_ADDRESS_MULTICAST || _command.getType() == DELETE_ADDRES_MULTICAST || _command.getType() == DELETE_MULTICAST || _command.getType() == READ_CONFIGURATION_MULTICAST) {
                 manageMulticastConfiguration(_command);
                 it.remove();
+                this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Multicast command");
             } else if (_command.getType() == QUEUE_ALERT) {
                 if (_command.isBroadcast()) {
                     this.cmdListToClient.addAll(this.pCon.getAlertQueue());
+                    this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Alert Queue command");
                 } else {
                     this.cmdListToClient.addAll(this.pCon.getAlertQueue(_command.getAddress()));
+                    this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Alert Queue command to " + _command.getAddress() + " spot");
                 }
                 it.remove();
             } else {
@@ -230,14 +242,12 @@ public class Server implements Runnable {
         while (it.hasNext()) {
             Command _command = it.next();
             //Se envia el comando
-            //System.out.println(_command.toString());
             if (!sendToSpot(_command)) {
                 it.remove();
             }
 
 
         }
-        //System.out.println(_cmdlistFromClient.toString());
     }
 
     /**
@@ -246,7 +256,6 @@ public class Server implements Runnable {
      * @param cmdlistFromClient
      */
     private void processToSendToClient(ArrayList<Command> cmdlistFromClient) {
-        //System.out.println(_cmdlistFromClient.toString());
         Iterator<Command> it = cmdlistFromClient.iterator();
         while (it.hasNext()) {
             Command _command = it.next();
@@ -271,19 +280,22 @@ public class Server implements Runnable {
             case ADD_ADDRESS_MULTICAST:
                 this.peerDevices.addToMulticast(command.getAddress(), command.getValue().get(0));
                 _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
-                _command.addValue("Añadido " + command.getValue().get(0) + " a multicast " + command.getAddress());
+                _command.addValue("Add " + command.getValue().get(0) + " to multicast " + command.getAddress());
+                this.logger.logINFO(CLASSNAME, "manageMulticastConfiguration -- ADD_ADDRESS_MULTICAST", "Add " + command.getValue().get(0) + " to multicast " + command.getAddress());
                 this.cmdListToClient.add(_command);
                 break;
             case DELETE_ADDRES_MULTICAST:
                 this.peerDevices.deleteFromMulticast(command.getAddress(), command.getValue().get(0));
                 _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
-                _command.addValue("Eliminado " + command.getValue().get(0) + " de multicast " + command.getAddress());
+                _command.addValue("Delete " + command.getValue().get(0) + " from multicast " + command.getAddress());
+                this.logger.logINFO(CLASSNAME, "manageMulticastConfiguration -- DELETE_ADDRES_MULTICAST", "Delete " + command.getValue().get(0) + " from multicast " + command.getAddress());
                 this.cmdListToClient.add(_command);
                 break;
             case DELETE_MULTICAST:
                 this.peerDevices.deleteMulticastList(command.getAddress());
                 _command = new Command(command.getAddress(), command.getType(), System.currentTimeMillis(), command.getGUID(), false);
-                _command.addValue("Eliminada lista multicast " + command.getValue().get(0));
+                _command.addValue("Delete multicast list" + command.getValue().get(0));
+                this.logger.logINFO(CLASSNAME, "manageMulticastConfiguration -- DELETE_MULTICAST", "Delete multicast list" + command.getValue().get(0));
                 this.cmdListToClient.add(_command);
                 break;
             case READ_CONFIGURATION_MULTICAST:

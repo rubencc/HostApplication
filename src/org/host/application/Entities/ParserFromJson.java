@@ -1,5 +1,6 @@
 package org.host.application.Entities;
 
+import Helpers.LogHelper;
 import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -9,9 +10,12 @@ import org.json.simple.parser.ParseException;
 /**
  * Clase que parsea un mensaje JSON a la entidad Message.
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class ParserFromJson {
+
+    private final String CLASSNAME = getClass().getName();
+    private LogHelper logger;
 
     /**
      * Parsea un string a una entidad Message
@@ -21,6 +25,7 @@ public class ParserFromJson {
      */
     public Message parse(String input) {
         Message _message = new Message();
+        this.logger = LogHelper.getInstance();
         try {
 
             JSONParser parser = new JSONParser();
@@ -46,6 +51,7 @@ public class ParserFromJson {
                 _message.AddCommand(_comm);
             }
         } catch (ParseException ex) {
+            this.logger.logSEVERE(CLASSNAME, "parse -- ParseException", ex.getMessage());
         }
         return _message;
     }

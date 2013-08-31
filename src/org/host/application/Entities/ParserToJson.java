@@ -9,7 +9,7 @@ import org.json.simple.JSONObject;
  * Clase que parsea a formato JSON una entidad Message y sus correspondientes
  * comandos
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class ParserToJson {
 

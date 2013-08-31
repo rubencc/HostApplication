@@ -6,7 +6,7 @@ package org.host.application.Network;
 
 /**
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class PeerDevicesException extends Exception {
 

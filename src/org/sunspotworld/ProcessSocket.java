@@ -1,5 +1,6 @@
 package org.sunspotworld;
 
+import Helpers.LogHelper;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,22 +10,25 @@ import java.net.SocketException;
 /**
  * Clase que gestiona la conexión mediante socket
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class ProcessSocket {
 
     private Socket socket = null;
     private DataOutputStream oBuf;
     private DataInputStream iBuf;
+    private final String CLASSNAME = getClass().getName();
+    private LogHelper logger;
 
     protected ProcessSocket(Socket socket) {
+        this.logger = LogHelper.getInstance();
         this.socket = socket;
         try {
             this.oBuf = new DataOutputStream(socket.getOutputStream());
             this.iBuf = new DataInputStream(socket.getInputStream());
             this.socket.setKeepAlive(true);
-        } catch (IOException e) {
-            e.getMessage();
+        } catch (IOException ex) {
+            this.logger.logSEVERE(CLASSNAME, "ProcessSocket -- IOException", ex.getMessage());
         }
 
     }
@@ -38,9 +42,9 @@ public class ProcessSocket {
         try {
             this.oBuf.write(message.getBytes("UTF-8"));
             this.oBuf.flush();
-        } catch (IOException e) {
+        } catch (IOException ex) {
             this.close();
-            e.getMessage();
+            this.logger.logSEVERE(CLASSNAME, "send -- IOException", ex.getMessage());
         }
     }
 
@@ -62,11 +66,11 @@ public class ProcessSocket {
                         this.close();
                     }
                 }
-            } catch (SocketException e) {
-                e.getMessage();
+            } catch (SocketException ex) {
+                this.logger.logSEVERE(CLASSNAME, "recive -- SocketException", ex.getMessage());
                 close();
-            } catch (IOException e) {
-                e.getMessage();
+            } catch (IOException ex) {
+                this.logger.logSEVERE(CLASSNAME, "recive -- IOException", ex.getMessage());
             }
         }
         return _temp;
@@ -83,8 +87,8 @@ public class ProcessSocket {
             this.iBuf.close();
             this.oBuf.close();
             this.socket.close();
-        } catch (IOException e) {
-            e.getMessage();
+        } catch (IOException ex) {
+            this.logger.logSEVERE(CLASSNAME, "close -- IOException", ex.getMessage());
         }
     }
 

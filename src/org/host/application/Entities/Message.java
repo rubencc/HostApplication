@@ -6,16 +6,16 @@ import java.util.ArrayList;
  * Clase que modela la entidad de mensaje que se usara al parsear mensajes desde
  * JSON o al recibir datos desde spot.
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class Message {
 
     private long time;
     private String formatedTime;
-    private ArrayList<Command> _commands;
+    private ArrayList<Command> commands;
 
     public Message() {
-        this._commands = new ArrayList<Command>();
+        this.commands = new ArrayList<Command>();
     }
 
     /**
@@ -34,17 +34,17 @@ public class Message {
     }
 
     /**
-     * @return the _commands
+     * @return the commands
      */
     public Command getCommand(int index) {
         return getCommands().get(index);
     }
 
     /**
-     * @param commands the _commands to set
+     * @param commands the commands to set
      */
     public void setCommands(ArrayList<Command> commands) {
-        this._commands = commands;
+        this.commands = commands;
     }
 
     /**
@@ -75,9 +75,22 @@ public class Message {
     /**
      * Devuelve la lista de comandos.
      *
-     * @return the _commands
+     * @return the commands
      */
     public ArrayList<Command> getCommands() {
-        return _commands;
+        return commands;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder _sb = new StringBuilder();
+        _sb.append(this.formatedTime);
+        _sb.append("\n");
+        for (int i = 0; i < this.commands.size(); i++) {
+            _sb.append(this.commands.get(i).toString());
+            _sb.append("\n");
+        }
+        return _sb.toString();
+
     }
 }

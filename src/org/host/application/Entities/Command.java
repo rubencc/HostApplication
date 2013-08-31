@@ -11,7 +11,7 @@ import java.util.ArrayList;
  *
  * Clase que modela la entidad de comando para enviar o recibir a un spot.
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class Command {
 
@@ -91,7 +91,7 @@ public class Command {
 
     @Override
     public String toString() {
-        return new String("Address: " + this.address + " Tipo: " + this.Type + "\nValue: " + this.values + " GUID: " + this.GUID + "\nBroadcast: " + this.broadcast);
+        return new String("Address: " + this.address + " Type: " + this.Type + "\nValue: " + this.values + "\nGUID: " + this.GUID + "Broadcast: " + this.broadcast);
     }
 
     /**

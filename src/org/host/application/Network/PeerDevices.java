@@ -1,5 +1,6 @@
 package org.host.application.Network;
 
+import Helpers.LogHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,7 +9,7 @@ import java.util.Map;
 /**
  * Clase de instancia unica para la gestión de los dispostivos
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class PeerDevices {
 
@@ -18,10 +19,13 @@ public class PeerDevices {
     private HashMap<String, ArrayList<String>> multicastList;
     //Instancia de la clase
     private static PeerDevices INSTANCE = new PeerDevices();
+    private final String CLASSNAME = getClass().getName();
+    private LogHelper logger;
 
     private PeerDevices() {
         this.devices = new HashMap<String, Integer>();
         this.multicastList = new HashMap<String, ArrayList<String>>();
+        this.logger = LogHelper.getInstance();
     }
 
     public static PeerDevices getInstance() {
@@ -36,8 +40,8 @@ public class PeerDevices {
     public synchronized void addDevice(String address) {
         synchronized (this.devices) {
             this.devices.put(address, 0);
-            System.out.println("Nuevo dispositivo: " + address);
         }
+        this.logger.logINFO(CLASSNAME, "addDevice", "New spot " + address);
     }
 
     /**
@@ -49,6 +53,7 @@ public class PeerDevices {
         synchronized (this.devices) {
             this.devices.remove(address);
         }
+        this.logger.logINFO(CLASSNAME, "removeDevice", "Delete spot " + address);
     }
 
     /**
@@ -78,14 +83,11 @@ public class PeerDevices {
 
                 switch (_count) {
                     case 5:
-                        System.out.println("[" + item.getKey() + "] Eliminando dispositivo");
                         _addressList.add(item.getKey());
                         break;
                     case 0:
-                        //System.out.println("[" + item.getKey() + "] Esta conectado");
                         break;
                     default:
-                        //System.out.println("[" + item.getKey() + "] No ha respondido a " + _count + " ping request");
                         break;
                 }
                 _count++;
@@ -149,9 +151,8 @@ public class PeerDevices {
             ArrayList<String> _temp = this.multicastList.get(multicasAddress);
             if (!_temp.contains(deviceAddress) && !this.multicastList.containsKey(deviceAddress)) {
                 _temp.add(deviceAddress);
-                //System.out.println("Creando nueva entrada en multicast " + multicasAddress + " para " + deviceAddress);
             } else {
-                System.out.println("Entrada ya contenida multicast ");
+                this.logger.logINFO(CLASSNAME, "addToMulticast", "Address " + deviceAddress + " already exists in multicast " + multicasAddress);
             }
         } else {
             //System.out.println("Añadiendo: " + deviceAddress + " a la lista multicast: " + multicasAddress);
@@ -170,11 +171,10 @@ public class PeerDevices {
      */
     public synchronized void deleteFromMulticast(String multicasAddress, String deviceAddress) {
         if (this.multicastList.containsKey(multicasAddress)) {
-            //System.out.println("Eliminando entrada multicast para: " + multicasAddress + " -- " + deviceAddress);
             ArrayList<String> _temp = this.multicastList.get(multicasAddress);
             _temp.remove(deviceAddress);
         } else {
-            //System.out.println("La direccion: " + deviceAddress + " no pertenece al multicast " + multicasAddress);
+            this.logger.logINFO(CLASSNAME, "deleteFromMulticast", "Address " + deviceAddress + " is not into multicast " + multicasAddress);
         }
     }
 
@@ -186,11 +186,9 @@ public class PeerDevices {
      */
     public synchronized ArrayList<String> isMulticastAddress(String deviceAddress) {
         if (this.multicastList.containsKey(deviceAddress)) {
-            //System.out.println(deviceAddress + " es multicast");
             ArrayList<String> _temp = this.multicastList.get(deviceAddress);
             return _temp;
         } else {
-            //System.out.println(deviceAddress + " no es multicast");
             return null;
         }
     }
@@ -202,7 +200,6 @@ public class PeerDevices {
      */
     public synchronized void deleteMulticastList(String multicasAddress) {
         if (this.multicastList.containsKey(multicasAddress)) {
-            System.out.println("Lista multicast " + multicasAddress + " eliminada");
             this.multicastList.remove(multicasAddress);
         }
     }

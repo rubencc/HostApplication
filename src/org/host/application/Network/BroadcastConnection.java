@@ -1,5 +1,6 @@
 package org.host.application.Network;
 
+import Helpers.LogHelper;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -12,7 +13,7 @@ import org.host.application.Entities.Command;
 /**
  * Clase de instancia unica que gestiona la conexiñon broadcast
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class BroadcastConnection implements Runnable {
 
@@ -30,6 +31,8 @@ public class BroadcastConnection implements Runnable {
     //Instnacia del gestor de dispostivios
     private PeerDevices peerDevices = PeerDevices.getInstance();
     private Command cmdPing;
+    private final String CLASSNAME = getClass().getName();
+    private LogHelper logger;
 
     public void run() {
         finish = true;
@@ -38,15 +41,16 @@ public class BroadcastConnection implements Runnable {
             this.bCon = (DatagramConnection) Connector.open("radiogram://broadcast:" + this.BROADCAST_PORT);
             this.sendDg = this.bCon.newDatagram(bCon.getMaximumLength());
             this.cmdPing = new Command(PING_PACKET_REQUEST);
+            this.logger = LogHelper.getInstance();
         } catch (IOException ex) {
-            Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "run -- IOException", ex.getMessage());
         }
 
         //Mientras no se indique terminacion del hilo: 
         while (this.finish) {
             try {
                 //Cada 5s se envia un paquete de ping
-                Thread.sleep(5000);
+                Thread.sleep(3000);
                 SendBroadcast(this.cmdPing);
                 this.peerDevices.checkAllDevices();
                 //Pasado el primer ciclo de espera la conexion esta completamente disposible
@@ -54,9 +58,9 @@ public class BroadcastConnection implements Runnable {
                     this.ready = true;
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
+                this.logger.logSEVERE(CLASSNAME, "run -- InterruptedException", ex.getMessage());
             } catch (BroadcastConnectionException ex) {
-                Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
+                this.logger.logSEVERE(CLASSNAME, "run -- BroadcastConnectionException", ex.getMessage());
             }
         }
         this.CloseBroadcastConnection();
@@ -76,7 +80,7 @@ public class BroadcastConnection implements Runnable {
         try {
             this.bCon.close();
         } catch (IOException ex) {
-            Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "CloseBroadcastConnection -- IOException", "closing peer connection " + ex.getMessage());
         }
     }
 
@@ -112,7 +116,7 @@ public class BroadcastConnection implements Runnable {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(BroadcastConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "SendBroadcast -- IOException", ex.getMessage());
             throw new BroadcastConnectionException("Error al enviar en broadcast");
         }
     }

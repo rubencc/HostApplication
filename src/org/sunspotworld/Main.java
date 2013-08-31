@@ -1,5 +1,6 @@
 package org.sunspotworld;
 
+import Helpers.LogHelper;
 import org.host.application.Network.BroadcastConnection;
 import org.host.application.Network.PeerConnection;
 import java.net.ServerSocket;
@@ -8,17 +9,19 @@ import java.net.Socket;
 /**
  * Clase principal
  *
- * @author: rubencc
+ * @author: Rubén Carretero <rubencc@gmail.com>
  */
 public class Main {
 
     private static final int SOCKET_LISTEN_PORT = 2000;
+    private final String CLASSNAME = getClass().getName();
 
     private void run() throws Exception {
+        LogHelper logger = LogHelper.getInstance();
         Server _serverTread = null;
         ServerSocket _ssocket = new ServerSocket(SOCKET_LISTEN_PORT, 10);
         Socket _socket = null;
-        System.out.println("Escuchando el puerto: " + _ssocket.getLocalPort());
+        logger.logINFO(CLASSNAME, null, "HostApllication running on port " + SOCKET_LISTEN_PORT);
         //Lanza en hilo de comunicaciones broadcast
         BroadcastConnection _bCon = new BroadcastConnection();
         new Thread(_bCon).start();
@@ -29,7 +32,7 @@ public class Main {
         while (true) {
             _socket = _ssocket.accept();
             if (_socket != null) {
-                //System.out.println("Conexion establecida en puerto: " + _socket.getLocalPort());
+                logger.logINFO(CLASSNAME, null, "Client in port: " + _socket.getLocalPort());
                 //Se lanza un nuevo hilo para antender la peticion
                 _serverTread = new Server(_socket, _bCon, _pCon);
                 new Thread(_serverTread).start();

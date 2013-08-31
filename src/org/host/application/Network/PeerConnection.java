@@ -1,14 +1,12 @@
 package org.host.application.Network;
 
+import Helpers.LogHelper;
 import com.sun.spot.io.j2me.radiogram.RadiogramConnection;
 import java.io.IOException;
-import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.microedition.io.Connector;
 import javax.microedition.io.Datagram;
 import org.host.application.Entities.Command;
@@ -17,7 +15,7 @@ import org.host.application.Entities.Command;
  * Clase de instancia unica que gestion la conexión peer. Mantiene una lista de
  * dispositivos activos en la clase PeerDevices.
  *
- * @author rubencc
+ * @author Rubén Carretero <rubencc@gmail.com>
  */
 public class PeerConnection implements Runnable {
 
@@ -41,12 +39,15 @@ public class PeerConnection implements Runnable {
     private ArrayList<Command> alertQueue;
     //Instancia del gestor de dispostivios
     private PeerDevices peerDevices;
+    private final String CLASSNAME = getClass().getName();
+    private LogHelper logger;
 
     public PeerConnection() {
         this.broadcastCommandList = new HashMap<String, ArrayList<Command>>();
         this.individualCommandList = new HashMap<String, Command>();
         this.alertQueue = new ArrayList<Command>();
         this.peerDevices = PeerDevices.getInstance();
+        this.logger = LogHelper.getInstance();
     }
 
     @Override
@@ -57,7 +58,7 @@ public class PeerConnection implements Runnable {
             rCon = (RadiogramConnection) Connector.open("radiogram://:" + HOST_PORT);
             this.setRadiogramConnection();
         } catch (IOException ex) {
-            Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "run -- IOException", ex.getMessage());
         }
         //Escucha respuestas de los dispositivos a los mensajes de broadcast
         while (finish) {
@@ -65,7 +66,7 @@ public class PeerConnection implements Runnable {
                 this.receive();
                 Thread.sleep(500);
             } catch (InterruptedException ex) {
-                Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
+                this.logger.logSEVERE(CLASSNAME, "run -- InterruptedException", ex.getMessage());
             }
         }
     }
@@ -91,7 +92,7 @@ public class PeerConnection implements Runnable {
             }
 
         } catch (IOException ex) {
-            Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "setRadiogramConnection -- IOException", ex.getMessage());
         }
     }
 
@@ -101,9 +102,9 @@ public class PeerConnection implements Runnable {
     public void CloseRadiogramConnection() {
         try {
             rCon.close();
-            System.out.println("Cerrando conexiones de radio");
+            this.logger.logSEVERE(CLASSNAME, "CloseRadiogramConnection", "Clossing radio connecyion");
         } catch (IOException ex) {
-            Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "CloseRadiogramConnection -- IOException", ex.getMessage());
         }
     }
 
@@ -147,8 +148,8 @@ public class PeerConnection implements Runnable {
                     }
                 }
             }
-        } catch (Exception e) {
-            System.err.println(e.getMessage() + " mientras se leia la conexion peer");
+        } catch (Exception ex) {
+            this.logger.logSEVERE(CLASSNAME, "receive -- Exception", ex.getMessage());
         }
     }
 
@@ -172,11 +173,10 @@ public class PeerConnection implements Runnable {
             long _time = receiveDg.readLong();
             String _GUID = receiveDg.readUTF();
             boolean _individual = receiveDg.readBoolean();
-            //System.out.println(PeerConnection.class.getName() + "[readDatagram]" + " " + _address + " " + _type + " " + _value + " " + _time + " " + _GUID + " " + _individual);
             _command = new Command(_address, _type, _values, _time, _GUID, _individual);
 
         } catch (IOException ex) {
-            Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "readDatagram -- IOException", ex.getMessage());
         }
         return _command;
     }
@@ -187,19 +187,16 @@ public class PeerConnection implements Runnable {
      * @param _command
      */
     private void addBroadcastResponse(Command _command) {
-        //System.out.println("Hilo peer -- Recibiendo respuestas broadcast" + _command);
         synchronized (this.broadcastCommandList) {
             if (this.broadcastCommandList.containsKey(_command.getGUID())) {
                 /*Si ya existen respuestas de otros dispostivios a este mensaje broadcast se almacenan en la colección 
                  correspondiente, si no se crea y se almacena*/
-                //System.out.println("Elemento añadido a la lista " + _command.getGUID() + " " + _command.getAddress());
                 ArrayList<Command> _tempList = this.broadcastCommandList.get(_command.getGUID());
                 synchronized (_tempList) {
                     _tempList.add(_command);
                     _tempList.notify();
                 }
             } else {
-                //System.out.println("Elemento añadido a la nueva lista " + _command.getGUID() + " " + _command.getAddress());
                 ArrayList<Command> _tempList = new ArrayList<Command>();
                 _tempList.add(_command);
                 this.broadcastCommandList.put(_command.getGUID(), _tempList);
@@ -226,10 +223,10 @@ public class PeerConnection implements Runnable {
             } else {
                 _sendCond = false;
             }
-        } catch (IOException e) {
-            throw new PeerConnectionException("Error al formar la PDU --" + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            throw new PeerConnectionException("Error al formar la PDU --" + e.getMessage());
+        } catch (IOException ex) {
+            this.logger.logSEVERE(CLASSNAME, "Send -- IOException", ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            this.logger.logSEVERE(CLASSNAME, "Send -- IllegalArgumentException", ex.getMessage());
         }
 
         try {
@@ -248,7 +245,7 @@ public class PeerConnection implements Runnable {
 
             }
         } catch (IOException ex) {
-            Logger.getLogger(PeerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.logSEVERE(CLASSNAME, "Send -- IOException", ex.getMessage());
         }
         return _temp;
     }
