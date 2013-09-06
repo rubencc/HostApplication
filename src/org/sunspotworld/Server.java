@@ -74,7 +74,6 @@ public class Server implements Runnable {
             }
         }
 
-        //System.out.println("Hilo terminado");
     }
 
     /**
@@ -102,7 +101,7 @@ public class Server implements Runnable {
         } else {
             try {
                 //Envia en modo peer
-                this.pCon.Send(command);
+                this.pCon.send(command);
                 result = true;
                 this.logger.logINFO(CLASSNAME, "sendToSpot -- Peer", "Sendt to spot in peer");
             } catch (PeerConnectionException ex) {

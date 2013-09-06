@@ -18,6 +18,7 @@ public class LogHelper {
 
     private static LogHelper INSTANCE = new LogHelper();
     private Logger logger;
+    private boolean debug = false;
 
     private LogHelper() {
         this.logger = Logger.getAnonymousLogger();
@@ -28,7 +29,7 @@ public class LogHelper {
         try {
             FileHandler fh = new FileHandler("%h/hostapplication_%g.log", 10485760, 7, true);
             fh.setLevel(Level.ALL);
-            fh.setFormatter(new SimpleFormatter());
+            fh.setFormatter(new LogFormatter());
             this.logger.addHandler(fh);
             this.logger.setLevel(Level.ALL);
             this.logger.setUseParentHandlers(false);
@@ -54,5 +55,18 @@ public class LogHelper {
 
     public void logSEVERE(String className, String method, String text) {
         this.logger.logp(Level.SEVERE, className, method, text);
+    }
+
+    public void logFINE(String className, String method, String text) {
+        if (this.debug) {
+            this.logger.logp(Level.FINE, className, method, text);
+        }
+    }
+
+    /**
+     * @param debug the debug to set
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 }

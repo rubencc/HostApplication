@@ -91,7 +91,7 @@ public class Command {
 
     @Override
     public String toString() {
-        return new String("Address: " + this.address + " Type: " + this.Type + "\nValue: " + this.values + "\nGUID: " + this.GUID + "Broadcast: " + this.broadcast);
+        return "Address: " + this.address + " Type: " + this.Type + "\nValue: " + this.values + "\nGUID: " + this.GUID + " Broadcast: " + this.broadcast;
     }
 
     /**

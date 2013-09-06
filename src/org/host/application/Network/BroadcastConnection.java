@@ -95,7 +95,6 @@ public class BroadcastConnection implements Runnable {
         try {
             //Si la conexion esta completamente disponible
             if (this.ready) {
-                //System.out.println("Enviando [" + command.getType() + " " + command.getValue() + "] en broadcast" + "[" + command.getGUID() + "]");
                 this.sendDg.reset();
                 /*El formato de la PDU es {tipo,tamaño, valor, guid}*/
                 this.sendDg.writeInt(command.getType());
@@ -113,6 +112,9 @@ public class BroadcastConnection implements Runnable {
                     this.bCon.send(this.sendDg);
                 } else {
                     throw new BroadcastConnectionException("Los campos de la PDU no son correctos");
+                }
+                if (command.getType() != PING_PACKET_REQUEST) {
+                    this.logger.logFINE(CLASSNAME, "SendBroadcast -- debug command", command.toString());
                 }
             }
         } catch (IOException ex) {

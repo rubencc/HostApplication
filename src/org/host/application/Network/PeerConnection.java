@@ -136,6 +136,7 @@ public class PeerConnection implements Runnable {
                 //La PDU se almacena en la cola de alertas
                 _command.setGUID(UUID.randomUUID().toString());
                 this.alertQueue.add(_command);
+                this.logger.logFINE(CLASSNAME, "receive -- debug command", _command.toString());
             } else {
                 if (_command.isBroadcast()) {
                     //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión broadcast
@@ -147,6 +148,7 @@ public class PeerConnection implements Runnable {
                         this.individualCommandList.notify();
                     }
                 }
+                this.logger.logFINE(CLASSNAME, "receive -- debug command", _command.toString());
             }
         } catch (Exception ex) {
             this.logger.logSEVERE(CLASSNAME, "receive -- Exception", ex.getMessage());
@@ -212,7 +214,7 @@ public class PeerConnection implements Runnable {
      * @param message
      * @return
      */
-    public synchronized boolean Send(Command command) throws PeerConnectionException {
+    public synchronized boolean send(Command command) throws PeerConnectionException {
         boolean _sendCond = true;
         boolean _temp = false;
         try {
@@ -236,6 +238,7 @@ public class PeerConnection implements Runnable {
                     this.individualCommandList.put(command.getGUID(), null);
                 }
                 this.rCon.send(sendDg);
+                this.logger.logFINE(CLASSNAME, "receive -- debug command", command.toString());
             } else {
                 if (_sendCond) {
                     throw new PeerConnectionException("El dispositivo no esta conectado");

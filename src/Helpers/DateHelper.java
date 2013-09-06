@@ -18,7 +18,7 @@ public class DateHelper {
      */
     public static String convertLongToString(long time) {
         Date _time = new Date(time);
-        SimpleDateFormat _formatTime = new SimpleDateFormat("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
+        SimpleDateFormat _formatTime = new SimpleDateFormat("dd.MM.yyyy 'at' hh:mm:ss:S");
         return _formatTime.format(_time);
     }
 }
