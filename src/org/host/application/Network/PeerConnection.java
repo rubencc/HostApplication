@@ -1,6 +1,7 @@
 package org.host.application.Network;
 
 import Helpers.LogHelper;
+import Helpers.MeassureLogHelper;
 import com.sun.spot.io.j2me.radiogram.RadiogramConnection;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class PeerConnection implements Runnable {
 
     private final int PING_PACKET_REPLY = 0x33;
     private final int QUEUE_ALERT = 0x20;
+    private final int THRESHOLD_INFO = 0x97;
     //Puerto para la conexion peer
     private final int HOST_PORT = 100;
     //Conexión peer
@@ -41,6 +43,7 @@ public class PeerConnection implements Runnable {
     private PeerDevices peerDevices;
     private final String CLASSNAME = getClass().getName();
     private LogHelper logger;
+    private MeassureLogHelper mlogger;
 
     public PeerConnection() {
         this.broadcastCommandList = new HashMap<String, ArrayList<Command>>();
@@ -48,6 +51,7 @@ public class PeerConnection implements Runnable {
         this.alertQueue = new ArrayList<Command>();
         this.peerDevices = PeerDevices.getInstance();
         this.logger = LogHelper.getInstance();
+        this.mlogger = MeassureLogHelper.getInstance();
     }
 
     @Override
@@ -123,32 +127,39 @@ public class PeerConnection implements Runnable {
             //Lectura del datagrama
             Command _command = this.readDatagram(this.receiveDg);
 
-            if (_command.getType() == PING_PACKET_REPLY) {
-                //Si el dispositivo no existe se añade a la lista
-                //En caso de existir se decrementa su contador
-                if (!peerDevices.existDevices(_command.getAddress())) {
-                    peerDevices.addDevice(_command.getAddress());
-                } else {
-                    peerDevices.checkDevice(_command.getAddress());
-                }
-
-            } else if (_command.getType() == QUEUE_ALERT) {
-                //La PDU se almacena en la cola de alertas
-                _command.setGUID(UUID.randomUUID().toString());
-                this.alertQueue.add(_command);
-                this.logger.logFINE(CLASSNAME, "receive -- debug command", _command.toString());
-            } else {
-                if (_command.isBroadcast()) {
-                    //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión broadcast
-                    addBroadcastResponse(_command);
-                } else {
-                    //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión peer
-                    synchronized (this.individualCommandList) {
-                        this.individualCommandList.put(_command.getGUID(), _command);
-                        this.individualCommandList.notify();
+            switch (_command.getType()) {
+                case PING_PACKET_REPLY:
+                    //Si el dispositivo no existe se añade a la lista
+                    //En caso de existir se decrementa su contador
+                    if (!peerDevices.existDevices(_command.getAddress())) {
+                        peerDevices.addDevice(_command.getAddress());
+                    } else {
+                        peerDevices.checkDevice(_command.getAddress());
                     }
-                }
-                this.logger.logFINE(CLASSNAME, "receive -- debug command", _command.toString());
+                    break;
+                case QUEUE_ALERT:
+                    //La PDU se almacena en la cola de alertas
+                    _command.setGUID(UUID.randomUUID().toString());
+                    this.alertQueue.add(_command);
+                    this.logger.logFINE(CLASSNAME, "receive -- debug command", _command.toString());
+                    break;
+                case THRESHOLD_INFO:
+                    _command.setGUID(UUID.randomUUID().toString());
+                    this.mlogger.logINFO("MEASURE", "Receive from Spot", _command.toString());
+                    break;
+                default:
+                    if (_command.isBroadcast()) {
+                        //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión broadcast
+                        addBroadcastResponse(_command);
+                    } else {
+                        //Se trata de una mensaje de respuesta a un mensaje enviado por la conexión peer
+                        synchronized (this.individualCommandList) {
+                            this.individualCommandList.put(_command.getGUID(), _command);
+                            this.individualCommandList.notify();
+                        }
+                    }
+                    this.logger.logFINE(CLASSNAME, "receive -- debug command", _command.toString());
+                    break;
             }
         } catch (Exception ex) {
             this.logger.logSEVERE(CLASSNAME, "receive -- Exception", ex.getMessage());

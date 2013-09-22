@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package Helpers;
 
 import java.io.IOException;
@@ -13,20 +9,20 @@ import java.util.logging.Logger;
  *
  * @author Rubén Carretero <rubencc@gmail.com>
  */
-public class LogHelper {
+public class MeassureLogHelper {
 
-    private static LogHelper INSTANCE = new LogHelper();
+    private static MeassureLogHelper INSTANCE = new MeassureLogHelper();
     private Logger logger;
     private boolean debug = false;
 
-    private LogHelper() {
+    private MeassureLogHelper() {
         this.logger = Logger.getAnonymousLogger();
         loadConfig();
     }
 
     private void loadConfig() {
         try {
-            FileHandler fh = new FileHandler("%h/hostapplication_%g.log", 10485760, 7, true);
+            FileHandler fh = new FileHandler("%h/meassures_%g.log", 10485760, 1, false);
             fh.setLevel(Level.ALL);
             fh.setFormatter(new LogFormatter());
             this.logger.addHandler(fh);
@@ -40,7 +36,7 @@ public class LogHelper {
 
     }
 
-    public static LogHelper getInstance() {
+    public static MeassureLogHelper getInstance() {
         return INSTANCE;
     }
 
