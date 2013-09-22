@@ -173,6 +173,9 @@ public class PeerDevices {
         if (this.multicastList.containsKey(multicasAddress)) {
             ArrayList<String> _temp = this.multicastList.get(multicasAddress);
             _temp.remove(deviceAddress);
+            if (_temp.isEmpty()) {
+                this.multicastList.remove(multicasAddress);
+            }
         } else {
             this.logger.logINFO(CLASSNAME, "deleteFromMulticast", "Address " + deviceAddress + " is not into multicast " + multicasAddress);
         }
