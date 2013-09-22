@@ -370,7 +370,6 @@ public class PeerConnection implements Runnable {
                 Command _command = it.next();
                 if (_command.getAddress().equals(address)) {
                     _temp.add(_command);
-                } else {
                     it.remove();
                 }
             }

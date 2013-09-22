@@ -214,15 +214,6 @@ public class Server implements Runnable {
                 manageMulticastConfiguration(_command);
                 it.remove();
                 this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Multicast command");
-            } else if (_command.getType() == QUEUE_ALERT) {
-                if (_command.isBroadcast()) {
-                    this.cmdListToClient.addAll(this.pCon.getAlertQueue());
-                    this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Alert Queue command");
-                } else {
-                    this.cmdListToClient.addAll(this.pCon.getAlertQueue(_command.getAddress()));
-                    this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Alert Queue command to " + _command.getAddress() + " spot");
-                }
-                it.remove();
             } else {
                 ArrayList<String> _listAddress = this.peerDevices.isMulticastAddress(_command.getAddress());
                 //Si la lista de direcciones multicas no es nula se crean nuevos comandos
@@ -232,21 +223,32 @@ public class Server implements Runnable {
                 }
             }
         }
-
+        //Si se hay mensajes para miembros de una lista multicast se añaden a la lista de mensajes a enviar
         if (_tempList.size() > 0) {
             cmdlistFromClient.addAll(_tempList);
         }
-
+        //Se recorre la lista y se envian a los dispositivos
         it = cmdlistFromClient.iterator();
         while (it.hasNext()) {
             Command _command = it.next();
-            //Se envia el comando
-            if (!sendToSpot(_command)) {
+            if (_command.getType() == QUEUE_ALERT) {
+                if (_command.isBroadcast()) {
+                    this.cmdListToClient.addAll(this.pCon.getAlertQueue());
+                    this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Alert Queue command");
+                } else {
+                    //System.out.println(_command.toString());
+                    this.cmdListToClient.addAll(this.pCon.getAlertQueue(_command.getAddress()));
+                    this.logger.logINFO(CLASSNAME, "processReceiveCommands", "Alert Queue command to " + _command.getAddress() + " spot");
+                }
                 it.remove();
+            } else {
+                //Se envia el comando
+                if (!sendToSpot(_command)) {
+                    it.remove();
+                }
             }
-
-
         }
+
     }
 
     /**
