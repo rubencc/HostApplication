@@ -13,7 +13,7 @@ import java.net.Socket;
  */
 public class Main {
 
-    private static final int SOCKET_LISTEN_PORT = 2000;
+    private static int listenPort = 2000;
     private final String CLASSNAME = getClass().getName();
 
     private void run(boolean debug) throws Exception {
@@ -22,9 +22,9 @@ public class Main {
             logger.setDebug(debug);
         }
         Server _serverTread = null;
-        ServerSocket _ssocket = new ServerSocket(SOCKET_LISTEN_PORT, 10);
+        ServerSocket _ssocket = new ServerSocket(listenPort, 10);
         Socket _socket = null;
-        logger.logINFO(CLASSNAME, "run", "HostApllication running on port " + SOCKET_LISTEN_PORT);
+        logger.logINFO(CLASSNAME, "run", "HostApllication running on port " + listenPort);
         //Lanza en hilo de comunicaciones broadcast
         BroadcastConnection _bCon = new BroadcastConnection();
         new Thread(_bCon).start();
@@ -56,8 +56,12 @@ public class Main {
         boolean _debug = false;
         if (args.length > 0) {
             String _temp = args[0];
+            String _port = args[1];
             if (_temp.equals("-v")) {
                 _debug = true;
+            }
+            if (_port.equals("-p")) {
+                listenPort = Integer.parseInt(args[2]);
             }
         }
         _app.run(_debug);
