@@ -57,7 +57,6 @@ public class Server implements Runnable {
                     ParserFromJson _parserFromJson = new ParserFromJson();
                     //Obtiene el mensaje despues de parsearlo
                     Message _message = _parserFromJson.parse(_temp);
-                    //this.logger.logINFO(CLASSNAME, "Message", _message.toString());
                     //Obtiene los comandos enviando en el mensaje
                     ArrayList<Command> _cmdlistFromClient = _message.getCommands();
                     //Procesa cada uno de los comandos contenidos en el mensaje
@@ -73,7 +72,7 @@ public class Server implements Runnable {
                 _runCond = false;
             }
         }
-
+        this.logger.logINFO(CLASSNAME, "run", "Thread finish");
     }
 
     /**

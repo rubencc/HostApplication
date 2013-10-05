@@ -87,6 +87,7 @@ public class ProcessSocket {
             this.iBuf.close();
             this.oBuf.close();
             this.socket.close();
+            this.logger.logINFO(CLASSNAME, "close", "Socket Closed");
         } catch (IOException ex) {
             this.logger.logSEVERE(CLASSNAME, "close -- IOException", ex.getMessage());
         }

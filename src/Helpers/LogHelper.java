@@ -26,7 +26,7 @@ public class LogHelper {
 
     private void loadConfig() {
         try {
-            FileHandler fh = new FileHandler("%h/hostapplication_%g.log", 10485760, 7, true);
+            FileHandler fh = new FileHandler("%h/hostapplication_%g.log", 1048576, 7, false);
             fh.setLevel(Level.ALL);
             fh.setFormatter(new LogFormatter());
             this.logger.addHandler(fh);

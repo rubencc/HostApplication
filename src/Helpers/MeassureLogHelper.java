@@ -22,9 +22,9 @@ public class MeassureLogHelper {
 
     private void loadConfig() {
         try {
-            FileHandler fh = new FileHandler("%h/meassures_%g.log", 10485760, 1, false);
+            FileHandler fh = new FileHandler("%h/meassures_%g.log", 1048576, 1, false);
             fh.setLevel(Level.ALL);
-            fh.setFormatter(new LogFormatter());
+            fh.setFormatter(new MeassureLogFormatter());
             this.logger.addHandler(fh);
             this.logger.setLevel(Level.ALL);
             this.logger.setUseParentHandlers(false);
